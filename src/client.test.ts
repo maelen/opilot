@@ -8,11 +8,12 @@ const makeVscodeMock = (host = 'http://localhost:11434') => ({
   workspace: {
     getConfiguration: vi.fn(() => ({
       get: vi.fn((key: string) => {
-        if (key === 'host') return host;
-        return undefined;
-      }),
-    })),
-  },
+        if (key === 'host') {
+          return host;
+        }
+      })
+    }))
+  }
 });
 
 // ---------------------------------------------------------------------------
@@ -30,11 +31,13 @@ describe('getOllamaClient', () => {
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'host') return 'http://myserver:11434';
-            return undefined;
-          }),
-        })),
-      },
+            if (key === 'host') {
+              return 'http://myserver:11434';
+            }
+            return;
+          })
+        }))
+      }
     }));
 
     const OllamaClass = vi.fn().mockImplementation(function (this: { host: string }, config: { host: string }) {
@@ -43,7 +46,7 @@ describe('getOllamaClient', () => {
     vi.doMock('ollama', () => ({ Ollama: OllamaClass }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue(undefined) },
+      secrets: { get: vi.fn().mockResolvedValue(undefined) }
     } as any;
 
     const { getOllamaClient } = await import('./client.js');
@@ -57,9 +60,9 @@ describe('getOllamaClient', () => {
     vi.doMock('vscode', () => ({
       workspace: {
         getConfiguration: vi.fn(() => ({
-          get: vi.fn(() => ''),
-        })),
-      },
+          get: vi.fn(() => '')
+        }))
+      }
     }));
 
     const OllamaClass = vi.fn().mockImplementation(function (this: { host: string }, config: { host: string }) {
@@ -68,7 +71,7 @@ describe('getOllamaClient', () => {
     vi.doMock('ollama', () => ({ Ollama: OllamaClass }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue(undefined) },
+      secrets: { get: vi.fn().mockResolvedValue(undefined) }
     } as any;
 
     const { getOllamaClient } = await import('./client.js');
@@ -83,11 +86,13 @@ describe('getOllamaClient', () => {
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'host') return 'http://localhost:11434';
-            return undefined;
-          }),
-        })),
-      },
+            if (key === 'host') {
+              return 'http://localhost:11434';
+            }
+            return;
+          })
+        }))
+      }
     }));
 
     const OllamaClass = vi.fn().mockImplementation(function (this: { config: unknown }, config: unknown) {
@@ -96,7 +101,7 @@ describe('getOllamaClient', () => {
     vi.doMock('ollama', () => ({ Ollama: OllamaClass }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue('my-secret-token') },
+      secrets: { get: vi.fn().mockResolvedValue('my-secret-token') }
     } as any;
 
     const { getOllamaClient } = await import('./client.js');
@@ -104,8 +109,8 @@ describe('getOllamaClient', () => {
 
     expect(OllamaClass).toHaveBeenCalledWith(
       expect.objectContaining({
-        headers: { Authorization: 'Bearer my-secret-token' },
-      }),
+        headers: { Authorization: 'Bearer my-secret-token' }
+      })
     );
   });
 
@@ -115,23 +120,25 @@ describe('getOllamaClient', () => {
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'host') return 'http://localhost:11434';
-            return undefined;
-          }),
-        })),
-      },
+            if (key === 'host') {
+              return 'http://localhost:11434';
+            }
+            return;
+          })
+        }))
+      }
     }));
 
     const OllamaClass = vi.fn().mockImplementation(function (
       this: { config: Record<string, unknown> },
-      config: Record<string, unknown>,
+      config: Record<string, unknown>
     ) {
       this.config = config;
     });
     vi.doMock('ollama', () => ({ Ollama: OllamaClass }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue(undefined) },
+      secrets: { get: vi.fn().mockResolvedValue(undefined) }
     } as any;
 
     const { getOllamaClient } = await import('./client.js');
@@ -184,7 +191,7 @@ describe('getOllamaHost / getOllamaAuthToken / getOllamaAuthHeaders / getCloudOl
     vi.doMock('ollama', () => ({ Ollama: class {} }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue('secret-token') },
+      secrets: { get: vi.fn().mockResolvedValue('secret-token') }
     } as any;
 
     const { getOllamaAuthToken } = await import('./client.js');
@@ -196,12 +203,12 @@ describe('getOllamaHost / getOllamaAuthToken / getOllamaAuthHeaders / getCloudOl
     vi.doMock('ollama', () => ({ Ollama: class {} }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue('secret-token') },
+      secrets: { get: vi.fn().mockResolvedValue('secret-token') }
     } as any;
 
     const { getOllamaAuthHeaders } = await import('./client.js');
     await expect(getOllamaAuthHeaders(context)).resolves.toEqual({
-      Authorization: 'Bearer secret-token',
+      Authorization: 'Bearer secret-token'
     });
   });
 
@@ -210,7 +217,7 @@ describe('getOllamaHost / getOllamaAuthToken / getOllamaAuthHeaders / getCloudOl
     vi.doMock('ollama', () => ({ Ollama: class {} }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue(undefined) },
+      secrets: { get: vi.fn().mockResolvedValue(undefined) }
     } as any;
 
     const { getOllamaAuthHeaders } = await import('./client.js');
@@ -226,7 +233,7 @@ describe('getOllamaHost / getOllamaAuthToken / getOllamaAuthHeaders / getCloudOl
     vi.doMock('ollama', () => ({ Ollama: OllamaClass }));
 
     const context = {
-      secrets: { get: vi.fn().mockResolvedValue('cloud-token') },
+      secrets: { get: vi.fn().mockResolvedValue('cloud-token') }
     } as any;
 
     const { getCloudOllamaClient } = await import('./client.js');
@@ -235,8 +242,8 @@ describe('getOllamaHost / getOllamaAuthToken / getOllamaAuthHeaders / getCloudOl
     expect(OllamaClass).toHaveBeenCalledWith(
       expect.objectContaining({
         host: 'http://localhost:11434',
-        headers: { Authorization: 'Bearer cloud-token' },
-      }),
+        headers: { Authorization: 'Bearer cloud-token' }
+      })
     );
   });
 });
@@ -271,7 +278,9 @@ describe('testConnection', () => {
     vi.doMock('ollama', () => ({ Ollama: class {} }));
 
     const { testConnection } = await import('./client.js');
-    const client = { list: vi.fn().mockRejectedValue(new Error('ECONNREFUSED')) } as any;
+    const client = {
+      list: vi.fn().mockRejectedValue(new Error('ECONNREFUSED'))
+    } as any;
 
     const result = await testConnection(client);
 
@@ -283,7 +292,14 @@ describe('testConnection', () => {
     vi.doMock('ollama', () => ({ Ollama: class {} }));
 
     const { testConnection } = await import('./client.js');
-    const client = { list: vi.fn().mockImplementation(() => new Promise(() => {})) } as any;
+    const client = {
+      list: vi.fn().mockImplementation(
+        () =>
+          new Promise(() => {
+            /* never resolves — tests timeout */
+          })
+      )
+    } as any;
 
     const result = await testConnection(client, 5);
 
@@ -296,13 +312,23 @@ describe('testConnection', () => {
 
     const { testConnection } = await import('./client.js');
     const onFailure = vi.fn();
-    const client = { list: vi.fn().mockImplementation(() => new Promise(() => {})) } as any;
+    const client = {
+      list: vi.fn().mockImplementation(
+        () =>
+          new Promise(() => {
+            /* never resolves — tests timeout */
+          })
+      )
+    } as any;
 
     const result = await testConnection(client, 5, onFailure);
 
     expect(result).toBe(false);
     expect(onFailure).toHaveBeenCalledWith(
-      expect.objectContaining({ kind: 'timeout', message: expect.stringContaining('timed out') }),
+      expect.objectContaining({
+        kind: 'timeout',
+        message: expect.stringContaining('timed out')
+      })
     );
   });
 
@@ -312,7 +338,7 @@ describe('testConnection', () => {
 
     const { testConnection } = await import('./client.js');
     const client = {
-      list: vi.fn().mockRejectedValue(Object.assign(new Error('aborted'), { name: 'AbortError' })),
+      list: vi.fn().mockRejectedValue(Object.assign(new Error('aborted'), { name: 'AbortError' }))
     } as any;
 
     const result = await testConnection(client);
@@ -329,7 +355,7 @@ describe('testConnection', () => {
     const authError = Object.assign(new Error('Unauthorized'), { status: 401 });
     const client = { list: vi.fn().mockRejectedValue(authError) } as any;
 
-    const result = await testConnection(client, 5_000, onFailure);
+    const result = await testConnection(client, 5000, onFailure);
 
     expect(result).toBe(false);
     expect(onFailure).toHaveBeenCalledWith(expect.objectContaining({ kind: 'authentication' }));
@@ -357,8 +383,8 @@ describe('fetchModelCapabilities', () => {
     const client = {
       show: vi.fn().mockResolvedValue({
         template: 'Hello {{ .Tools }} world',
-        details: { families: [] },
-      }),
+        details: { families: [] }
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'llama3.2:latest');
@@ -373,8 +399,8 @@ describe('fetchModelCapabilities', () => {
     const client = {
       show: vi.fn().mockResolvedValue({
         template: 'Hello world',
-        details: { families: ['llama', 'clip'] },
-      }),
+        details: { families: ['llama', 'clip'] }
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'llava:latest');
@@ -389,8 +415,8 @@ describe('fetchModelCapabilities', () => {
     const client = {
       show: vi.fn().mockResolvedValue({
         template: 'Handle vision input here',
-        details: { families: [] },
-      }),
+        details: { families: [] }
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'llava:latest');
@@ -407,8 +433,8 @@ describe('fetchModelCapabilities', () => {
       show: vi.fn().mockResolvedValue({
         template: '',
         details: { families: [] },
-        model_info: modelInfoMap,
-      }),
+        model_info: modelInfoMap
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'llama3.2:latest');
@@ -425,12 +451,12 @@ describe('fetchModelCapabilities', () => {
       show: vi.fn().mockResolvedValue({
         template: '',
         details: { families: [] },
-        model_info: { 'qwen2.context_length': 32768 },
-      }),
+        model_info: { 'qwen2.context_length': 32_768 }
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'qwen2:latest');
-    expect(caps.maxInputTokens).toBe(32768);
+    expect(caps.maxInputTokens).toBe(32_768);
   });
 
   it('reads context length from parameters string as fallback', async () => {
@@ -442,12 +468,12 @@ describe('fetchModelCapabilities', () => {
       show: vi.fn().mockResolvedValue({
         template: '',
         details: { families: [] },
-        parameters: 'num_ctx 16384\ntemperature 0.8',
-      }),
+        parameters: 'num_ctx 16384\ntemperature 0.8'
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'mistral:latest');
-    expect(caps.maxInputTokens).toBe(16384);
+    expect(caps.maxInputTokens).toBe(16_384);
   });
 
   it('returns conservative defaults when show() throws', async () => {
@@ -456,7 +482,7 @@ describe('fetchModelCapabilities', () => {
 
     const { fetchModelCapabilities } = await import('./client.js');
     const client = {
-      show: vi.fn().mockRejectedValue(new Error('Model not found')),
+      show: vi.fn().mockRejectedValue(new Error('Model not found'))
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'unknown:latest');
@@ -475,8 +501,8 @@ describe('fetchModelCapabilities', () => {
     const client = {
       show: vi.fn().mockResolvedValue({
         template: '',
-        details: { families: [] },
-      }),
+        details: { families: [] }
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'llama3.2:latest');
@@ -493,8 +519,8 @@ describe('fetchModelCapabilities', () => {
     const client = {
       show: vi.fn().mockResolvedValue({
         template: '',
-        details: { families: [] },
-      }),
+        details: { families: [] }
+      })
     } as any;
 
     const caps = await fetchModelCapabilities(client, 'llama3.2:latest');

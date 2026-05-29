@@ -3,16 +3,16 @@ name: Tests
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    tags: ["v*"]
     paths:
-      - 'src/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
+      - "src/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
   pull_request:
     paths:
-      - 'src/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
+      - "src/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
   workflow_dispatch:
 
 permissions:
@@ -67,23 +67,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'pnpm'
+          node-version: "24"
+          cache: "pnpm"
+
+      - name: Setup task runner
+        uses: go-task/setup-task@01a4adf9db2d14c1de7a560f09170b6e0df736aa # v2.1.0
+        with:
+          version: "3.x"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Check types
-        run: xvfb-run -a ./node_modules/.bin/task check-types
+        run: task check-types
 
       - name: Lint
-        run: xvfb-run -a ./node_modules/.bin/task lint
+        run: task lint
+        env:
+          PATH: ${{ github.workspace }}/node_modules/@biomejs/biome/bin:$PATH
 
       - name: Compile
-        run: xvfb-run -a ./node_modules/.bin/task compile
+        run: task compile
 
       - name: Run unit tests
-        run: xvfb-run -a ./node_modules/.bin/task unit-test-coverage -- --reporter=default --reporter=junit --outputFile=test-report.junit.xml
+        run: xvfb-run -a task unit-test-coverage -- --reporter=default --reporter=junit --outputFile=test-report.junit.xml
         env:
           CI: true
 
@@ -96,7 +103,7 @@ jobs:
             ${{ runner.os }}-vscode-test-
 
       - name: Run extension tests
-        run: xvfb-run -a ./node_modules/.bin/task extension-tests
+        run: xvfb-run -a task extension-tests
         env:
           CI: true
 
@@ -118,7 +125,7 @@ jobs:
           else
             echo "⚠️ OLLAMA_API_KEY not configured; running integration tests in local-only mode."
           fi
-          xvfb-run -a ./node_modules/.bin/task integration-tests
+          xvfb-run -a task integration-tests
         env:
           CI: true
           OLLAMA_TEST_MODEL: smollm:135m

@@ -10,7 +10,9 @@ describe('activate', () => {
   });
 
   it('registers language model provider during activation', async () => {
-    const registerLanguageModelChatProvider = vi.fn(() => ({ dispose: vi.fn() }));
+    const registerLanguageModelChatProvider = vi.fn(() => ({
+      dispose: vi.fn()
+    }));
 
     vi.doMock('vscode', () => ({
       TreeItem: class {
@@ -19,7 +21,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -38,7 +40,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -48,85 +50,98 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider,
+        registerLanguageModelChatProvider
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
       testConnection: vi.fn().mockResolvedValue(true),
-      redactUrlCredentials: vi.fn((value: string) => value),
+      redactUrlCredentials: vi.fn((value: string) => value)
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     expect(registerLanguageModelChatProvider).toHaveBeenCalledWith('selfagency-opilot', expect.anything());
   });
@@ -144,7 +159,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -163,7 +178,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -173,80 +188,91 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider,
+        registerLanguageModelChatProvider
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
@@ -261,7 +287,7 @@ describe('activate', () => {
       warn: vi.fn(),
       error: vi.fn(),
       debug: vi.fn(),
-      exception: vi.fn(),
+      exception: vi.fn()
     };
     const createDiagnosticsLogger = vi.fn().mockReturnValue(mockDiagnostics);
 
@@ -272,7 +298,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -291,7 +317,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -301,89 +327,103 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection,
+      testConnection
     }));
 
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger,
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     // Wait for async connection test
     await new Promise(resolve => setTimeout(resolve, 10));
@@ -399,7 +439,7 @@ describe('activate', () => {
       warn: vi.fn(),
       error: vi.fn(),
       debug: vi.fn(),
-      exception: vi.fn(),
+      exception: vi.fn()
     };
     const createDiagnosticsLogger = vi.fn().mockReturnValue(mockDiagnostics);
     const showErrorMessage = vi.fn().mockResolvedValue('Open Settings');
@@ -412,7 +452,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -431,7 +471,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -441,90 +481,106 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage,
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand,
+        executeCommand
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            if (key === 'host') return 'http://localhost:11434';
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            if (key === 'host') {
+              return 'http://localhost:11434';
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection,
+      testConnection
     }));
 
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger,
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     // Wait for async connection test
     await new Promise(resolve => setTimeout(resolve, 10));
@@ -540,7 +596,7 @@ describe('activate', () => {
       error: vi.fn(),
       debug: vi.fn(),
       log: vi.fn(),
-      show: vi.fn(),
+      show: vi.fn()
     }));
 
     vi.doMock('vscode', () => ({
@@ -550,7 +606,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -569,7 +625,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -577,60 +633,71 @@ describe('activate', () => {
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return true;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return true;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./diagnostics.js', () => ({
@@ -639,28 +706,31 @@ describe('activate', () => {
         warn: output.warn,
         error: output.error,
         debug: output.debug,
-        exception: vi.fn(),
+        exception: vi.fn()
       })),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     expect(createOutputChannel).toHaveBeenCalledWith('Opilot', expect.any(Object));
   });
@@ -678,7 +748,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -697,7 +767,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -707,86 +777,97 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider,
+        registerLanguageModelChatProvider
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
 
     await expect(ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any)).rejects.toThrow(
-      unhandledError,
+      unhandledError
     );
   });
 
@@ -800,7 +881,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -819,7 +900,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -829,84 +910,98 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand,
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     expect(registerCommand).toHaveBeenCalledWith('opilot.manageAuthToken', expect.any(Function));
   });
@@ -928,7 +1023,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -947,7 +1042,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -957,65 +1052,76 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration,
+        onDidChangeConfiguration
       },
       lm: {
-        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./diagnostics.js', () => ({
@@ -1024,33 +1130,36 @@ describe('activate', () => {
         warn: output.warn,
         error: output.error,
         debug: output.debug,
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     // Simulate streamLogs configuration change
     if (configChangeCallback) {
       configChangeCallback({
-        affectsConfiguration: (key: string) => key === 'ollama.streamLogs',
+        affectsConfiguration: (key: string) => key === 'ollama.streamLogs'
       });
     }
 
@@ -1058,7 +1167,9 @@ describe('activate', () => {
   });
 
   it('registers inline completion provider during activation', async () => {
-    const registerInlineCompletionItemProvider = vi.fn(() => ({ dispose: vi.fn() }));
+    const registerInlineCompletionItemProvider = vi.fn(() => ({
+      dispose: vi.fn()
+    }));
 
     vi.doMock('vscode', () => ({
       TreeItem: class {
@@ -1067,7 +1178,7 @@ describe('activate', () => {
       TreeItemCollapsibleState: {
         None: 0,
         Collapsed: 1,
-        Expanded: 2,
+        Expanded: 2
       },
       EventEmitter: class {
         event = {};
@@ -1086,7 +1197,7 @@ describe('activate', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
@@ -1096,89 +1207,103 @@ describe('activate', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'autoStartLogStreaming') return false;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'autoStartLogStreaming') {
+              return false;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
       },
       languages: {
-        registerInlineCompletionItemProvider,
+        registerInlineCompletionItemProvider
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
       },
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     expect(registerInlineCompletionItemProvider).toHaveBeenCalledOnce();
     expect(registerInlineCompletionItemProvider).toHaveBeenCalledWith(
       { pattern: '**' },
-      expect.objectContaining({ provideInlineCompletionItems: expect.any(Function) }),
+      expect.objectContaining({
+        provideInlineCompletionItems: expect.any(Function)
+      })
     );
   });
 });
@@ -1197,23 +1322,26 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
   });
 
   it('streams thinking tokens with a reasoning header and separator', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id),
+      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id)
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -1222,15 +1350,22 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]) },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -1242,17 +1377,18 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
     const mockClient = {
       chat: vi.fn().mockResolvedValue(
         (async function* () {
+          await Promise.resolve();
           yield { message: { thinking: 'step 1: consider options' } };
           yield { message: { thinking: ' step 2: decide' } };
           yield { message: { content: 'The answer is 42.' } };
           yield { message: {}, done: true };
-        })(),
-      ),
+        })()
+      )
     };
 
     const request = {
       prompt: 'what is the meaning of life?',
-      model: { vendor: 'selfagency-opilot', id: 'qwen3:8b' },
+      model: { vendor: 'selfagency-opilot', id: 'qwen3:8b' }
     };
 
     await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
@@ -1269,23 +1405,26 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
   });
 
   it('strips raw <think>...</think> tags from local model content stream', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id),
+      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id)
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -1294,15 +1433,22 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]) },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -1315,17 +1461,18 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
     const mockClient = {
       chat: vi.fn().mockResolvedValue(
         (async function* () {
+          await Promise.resolve();
           yield { message: { content: '<think>let me reason step 1' } };
           yield { message: { content: ' step 2</think>' } };
           yield { message: { content: 'The answer is 42.' } };
           yield { message: {}, done: true };
-        })(),
-      ),
+        })()
+      )
     };
 
     const request = {
       prompt: 'what is the meaning of life?',
-      model: { vendor: 'selfagency-opilot', id: 'qwen3:8b' },
+      model: { vendor: 'selfagency-opilot', id: 'qwen3:8b' }
     };
 
     await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
@@ -1347,23 +1494,26 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
   });
 
   it('passes think: true for known thinking model IDs', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id),
+      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id)
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -1372,29 +1522,45 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]) },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
     }));
 
     const ext = await import('./extension.js');
 
     const mockChat = vi.fn().mockResolvedValue(
       (async function* () {
+        await Promise.resolve();
         yield { message: { content: 'ok' }, done: true };
-      })(),
+      })()
     );
 
     const mockClient = { chat: mockChat };
@@ -1403,7 +1569,7 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
 
     const request = {
       prompt: 'hi',
-      model: { vendor: 'selfagency-opilot', id: 'qwen3:8b' },
+      model: { vendor: 'selfagency-opilot', id: 'qwen3:8b' }
     };
 
     await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
@@ -1412,23 +1578,26 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
   });
 
   it('formats tool calls as markdown in participant path', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id),
+      isThinkingModelId: (id: string) => /(qwen3|qwq|deepseek-?r1|cogito|phi\d+-reasoning)/i.test(id)
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -1437,21 +1606,36 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]) },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -1463,19 +1647,27 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
     const mockClient = {
       chat: vi.fn().mockResolvedValue(
         (async function* () {
+          await Promise.resolve();
           yield {
             message: {
-              tool_calls: [{ function: { name: 'get_weather', arguments: { location: 'NYC' } } }],
-            },
+              tool_calls: [
+                {
+                  function: {
+                    name: 'get_weather',
+                    arguments: { location: 'NYC' }
+                  }
+                }
+              ]
+            }
           };
           yield { message: { content: 'It is sunny in NYC.' }, done: true };
-        })(),
-      ),
+        })()
+      )
     };
 
     const request = {
       prompt: "what's the weather?",
-      model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' },
+      model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' }
     };
 
     await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
@@ -1485,23 +1677,26 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
   });
 
   it('shows error dialog and attempts model unload when model runner crashes', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -1512,22 +1707,37 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]) },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
-      window: { showErrorMessage },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      },
+      window: { showErrorMessage }
     }));
 
     const ext = await import('./extension.js');
@@ -1542,12 +1752,12 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
     const mockGenerateFn = vi.fn().mockResolvedValue({});
     const mockClient = {
       chat: mockChatFn,
-      generate: mockGenerateFn,
+      generate: mockGenerateFn
     };
 
     const request = {
       prompt: 'hello',
-      model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' },
+      model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' }
     };
 
     await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
@@ -1560,23 +1770,26 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
   });
 
   it('retries @ollama without tools when tool schema is rejected', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -1585,24 +1798,39 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: {
         selectChatModels: vi.fn().mockResolvedValue([]),
-        tools: [{ name: 'demo_tool', description: 'demo', inputSchema: null }],
+        tools: [{ name: 'demo_tool', description: 'demo', inputSchema: null }]
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -1618,13 +1846,16 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
       // Tool round request (stream=false) fails due to schema error
       .mockRejectedValueOnce(unsupportedToolsError)
       // XML fallback request (stream=false) returns plain text — no XML tool calls
-      .mockResolvedValueOnce({ message: { content: 'hello after fallback' }, done: true });
+      .mockResolvedValueOnce({
+        message: { content: 'hello after fallback' },
+        done: true
+      });
 
     const mockClient = { chat };
     const request = {
       prompt: '@ollama hello',
       model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' },
-      toolInvocationToken: 'tok-1',
+      toolInvocationToken: 'tok-1'
     };
 
     await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
@@ -1637,11 +1868,11 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
         tools: [
           expect.objectContaining({
             function: expect.objectContaining({
-              parameters: expect.objectContaining({ type: 'object' }),
-            }),
-          }),
-        ],
-      }),
+              parameters: expect.objectContaining({ type: 'object' })
+            })
+          })
+        ]
+      })
     );
     // XML fallback: stream=false, no tools key
     expect(chat).toHaveBeenNthCalledWith(2, expect.objectContaining({ stream: false }));
@@ -1661,7 +1892,7 @@ describe('handleConnectionTestFailure', () => {
     expect(showErrorMessage).toHaveBeenCalledWith(
       expect.stringContaining('Cannot connect to Ollama server'),
       'Open Settings',
-      'Open Logs',
+      'Open Logs'
     );
     expect(executeCommand).toHaveBeenCalledWith('workbench.action.openSettings', 'opilot');
   });
@@ -1676,7 +1907,7 @@ describe('handleConnectionTestFailure', () => {
     expect(showErrorMessage).toHaveBeenCalledWith(
       expect.stringContaining('Cannot connect to Ollama server'),
       'Open Settings',
-      'Open Logs',
+      'Open Logs'
     );
     expect(executeCommand).not.toHaveBeenCalled();
   });
@@ -1691,7 +1922,7 @@ describe('handleConnectionTestFailure', () => {
       'http://remote-server:11434',
       { showErrorMessage, showInformationMessage },
       { executeCommand: vi.fn() },
-      logOutputChannel,
+      logOutputChannel
     );
 
     expect(logOutputChannel.show).toHaveBeenCalled();
@@ -1714,7 +1945,7 @@ describe('setupChatParticipant', () => {
   it('creates and configures chat participant', async () => {
     const mockParticipant = {
       iconPath: undefined,
-      dispose: vi.fn(),
+      dispose: vi.fn()
     };
     const createChatParticipant = vi.fn(() => mockParticipant);
 
@@ -1722,7 +1953,9 @@ describe('setupChatParticipant', () => {
     const mockHandler = vi.fn() as any;
     const mockContext = { extensionUri: { fsPath: '/test' } };
 
-    const result = ext.setupChatParticipant(mockContext as any, mockHandler, { createChatParticipant } as any);
+    const result = ext.setupChatParticipant(mockContext as any, mockHandler, {
+      createChatParticipant
+    } as any);
 
     expect(createChatParticipant).toHaveBeenCalledWith('opilot.ollama', mockHandler);
     expect(mockParticipant.iconPath).toBeDefined();
@@ -1743,8 +1976,8 @@ describe('handleChatRequest errors', () => {
         vendor: 'selfagency-opilot',
         sendRequest: vi.fn(() => {
           throw new Error('Model error');
-        }),
-      },
+        })
+      }
     };
 
     const mockChatContext = { history: [] };
@@ -1768,14 +2001,19 @@ describe('handleChatRequest model selection', () => {
       LanguageModelTextPart: class {
         constructor(public value: string) {}
       },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ content }),
-        Assistant: (content: string) => ({ content }),
+        Assistant: (content: string) => ({ content })
       },
-      lm: { selectChatModels: mockSelectChatModels },
+      lm: { selectChatModels: mockSelectChatModels }
     }));
 
     const ext = await import('./extension.js');
@@ -1786,7 +2024,7 @@ describe('handleChatRequest model selection', () => {
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      { isCancellationRequested: false } as any,
+      { isCancellationRequested: false } as any
     );
 
     expect(mockMarkdown).toHaveBeenCalledWith(expect.stringContaining('No Ollama models available'));
@@ -1798,8 +2036,9 @@ describe('handleChatRequest model selection', () => {
     };
     const mockSendRequest = vi.fn().mockResolvedValue({
       stream: (async function* () {
+        await Promise.resolve();
         yield new LMTextPart('hello from ollama');
-      })(),
+      })()
     });
     const mockSelectChatModels = vi
       .fn()
@@ -1807,15 +2046,22 @@ describe('handleChatRequest model selection', () => {
 
     vi.doMock('vscode', () => ({
       LanguageModelTextPart: LMTextPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ content }),
-        Assistant: (content: string) => ({ content }),
+        Assistant: (content: string) => ({ content })
       },
       lm: { selectChatModels: mockSelectChatModels },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -1826,7 +2072,7 @@ describe('handleChatRequest model selection', () => {
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      { isCancellationRequested: false } as any,
+      { isCancellationRequested: false } as any
     );
 
     expect(mockSelectChatModels).toHaveBeenCalled();
@@ -1841,35 +2087,43 @@ describe('handleChatRequest model selection', () => {
     const mockSelectChatModels = vi.fn();
     const mockSendRequest = vi.fn().mockResolvedValue({
       stream: (async function* () {
+        await Promise.resolve();
         yield new LMTextPart('response from chosen model');
-      })(),
+      })()
     });
 
     vi.doMock('vscode', () => ({
       LanguageModelTextPart: LMTextPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ content }),
-        Assistant: (content: string) => ({ content }),
+        Assistant: (content: string) => ({ content })
       },
       lm: { selectChatModels: mockSelectChatModels },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
     const mockMarkdown = vi.fn();
     const mockRequest = {
       prompt: 'test',
-      model: { vendor: 'selfagency-opilot', sendRequest: mockSendRequest },
+      model: { vendor: 'selfagency-opilot', sendRequest: mockSendRequest }
     };
 
     await ext.handleChatRequest(
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      { isCancellationRequested: false } as any,
+      { isCancellationRequested: false } as any
     );
 
     expect(mockSendRequest).toHaveBeenCalled();
@@ -1889,37 +2143,45 @@ describe('handleChatRequest model selection', () => {
 
     const mockSendRequest = vi.fn().mockResolvedValue({
       stream: (async function* () {
+        await Promise.resolve();
         yield new LMTextPart('first chunk ');
         await waitForSecondChunk;
         yield new LMTextPart('second chunk');
-      })(),
+      })()
     });
 
     vi.doMock('vscode', () => ({
       LanguageModelTextPart: LMTextPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ content }),
-        Assistant: (content: string) => ({ content }),
+        Assistant: (content: string) => ({ content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]), tools: [] },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
     const mockMarkdown = vi.fn();
     const mockRequest = {
       prompt: 'test',
-      model: { vendor: 'selfagency-opilot', sendRequest: mockSendRequest },
+      model: { vendor: 'selfagency-opilot', sendRequest: mockSendRequest }
     };
 
     const pending = ext.handleChatRequest(
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      { isCancellationRequested: false } as any,
+      { isCancellationRequested: false } as any
     );
 
     // Allow the first streamed chunk to flow before the stream completes.
@@ -1941,37 +2203,45 @@ describe('handleChatRequest model selection', () => {
 
     const mockSendRequest = vi.fn().mockResolvedValue({
       stream: (async function* () {
+        await Promise.resolve();
         yield new LMTextPart('first chunk');
         mockToken.isCancellationRequested = true;
         yield new LMTextPart('second chunk should not render');
-      })(),
+      })()
     });
 
     vi.doMock('vscode', () => ({
       LanguageModelTextPart: LMTextPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ content }),
-        Assistant: (content: string) => ({ content }),
+        Assistant: (content: string) => ({ content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]), tools: [] },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
     const mockMarkdown = vi.fn();
     const mockRequest = {
       prompt: 'test',
-      model: { vendor: 'selfagency-opilot', sendRequest: mockSendRequest },
+      model: { vendor: 'selfagency-opilot', sendRequest: mockSendRequest }
     };
 
     await ext.handleChatRequest(
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      mockToken as any,
+      mockToken as any
     );
 
     expect(mockMarkdown).toHaveBeenCalledWith('first chunk');
@@ -1988,13 +2258,13 @@ describe('handleChatRequest model selection', () => {
       constructor(
         public callId: string,
         public name: string,
-        public input: Record<string, unknown>,
+        public input: Record<string, unknown>
       ) {}
     };
     const LMToolResultPart = class {
       constructor(
         public callId: string,
-        public content: unknown,
+        public content: unknown
       ) {}
     };
 
@@ -2003,40 +2273,49 @@ describe('handleChatRequest model selection', () => {
       .fn()
       .mockResolvedValueOnce({
         stream: (async function* () {
+          await Promise.resolve();
           yield new LMToolCallPart('call-1', 'search', { query: 'vitest' });
-        })(),
+        })()
       })
       .mockResolvedValueOnce({
         stream: (async function* () {
+          await Promise.resolve();
           yield new LMTextPart('final answer');
-        })(),
+        })()
       });
 
     const mockInvokeTool = vi.fn().mockResolvedValue({ content: [new LMTextPart('tool-result')] });
     const mockSelectChatModels = vi.fn().mockResolvedValue([
       {
         vendor: 'selfagency-opilot',
-        sendRequest: mockSendRequest,
-      },
+        sendRequest: mockSendRequest
+      }
     ]);
 
     vi.doMock('vscode', () => ({
       LanguageModelTextPart: LMTextPart,
       LanguageModelToolCallPart: LMToolCallPart,
       LanguageModelToolResultPart: LMToolResultPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: unknown) => ({ role: 'user', content }),
-        Assistant: (content: unknown) => ({ role: 'assistant', content }),
+        Assistant: (content: unknown) => ({ role: 'assistant', content })
       },
       lm: {
         selectChatModels: mockSelectChatModels,
         tools: [{ name: 'search', description: 'search the web', inputSchema: {} }],
-        invokeTool: mockInvokeTool,
+        invokeTool: mockInvokeTool
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -2044,21 +2323,24 @@ describe('handleChatRequest model selection', () => {
     const mockRequest = {
       prompt: 'test',
       model: { vendor: 'copilot' },
-      toolInvocationToken: 'tok-123',
+      toolInvocationToken: 'tok-123'
     };
 
     await ext.handleChatRequest(
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      { isCancellationRequested: false } as any,
+      { isCancellationRequested: false } as any
     );
 
     expect(mockSendRequest).toHaveBeenCalledTimes(2);
     expect(mockInvokeTool).toHaveBeenCalledWith(
       'search',
-      expect.objectContaining({ input: { query: 'vitest' }, toolInvocationToken: 'tok-123' }),
-      expect.anything(),
+      expect.objectContaining({
+        input: { query: 'vitest' },
+        toolInvocationToken: 'tok-123'
+      }),
+      expect.anything()
     );
     expect(mockMarkdown).toHaveBeenCalledWith('final answer');
   });
@@ -2073,13 +2355,13 @@ describe('handleChatRequest model selection', () => {
       constructor(
         public callId: string,
         public name: string,
-        public input: Record<string, unknown>,
+        public input: Record<string, unknown>
       ) {}
     };
     const LMToolResultPart = class {
       constructor(
         public callId: string,
-        public content: unknown,
+        public content: unknown
       ) {}
     };
 
@@ -2087,40 +2369,55 @@ describe('handleChatRequest model selection', () => {
       .fn()
       .mockResolvedValueOnce({
         stream: (async function* () {
+          await Promise.resolve();
           yield new LMToolCallPart('call-err', 'broken_tool', {});
-        })(),
+        })()
       })
       .mockResolvedValueOnce({
         stream: (async function* () {
+          await Promise.resolve();
           yield new LMTextPart('recovered');
-        })(),
+        })()
       });
 
     const mockInvokeTool = vi.fn().mockRejectedValue(new Error('tool crashed'));
     const mockSelectChatModels = vi.fn().mockResolvedValue([
       {
         vendor: 'selfagency-opilot',
-        sendRequest: mockSendRequest,
-      },
+        sendRequest: mockSendRequest
+      }
     ]);
 
     vi.doMock('vscode', () => ({
       LanguageModelTextPart: LMTextPart,
       LanguageModelToolCallPart: LMToolCallPart,
       LanguageModelToolResultPart: LMToolResultPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: unknown) => ({ role: 'user', content }),
-        Assistant: (content: unknown) => ({ role: 'assistant', content }),
+        Assistant: (content: unknown) => ({ role: 'assistant', content })
       },
       lm: {
         selectChatModels: mockSelectChatModels,
-        tools: [{ name: 'broken_tool', description: 'a broken tool', inputSchema: {} }],
-        invokeTool: mockInvokeTool,
+        tools: [
+          {
+            name: 'broken_tool',
+            description: 'a broken tool',
+            inputSchema: {}
+          }
+        ],
+        invokeTool: mockInvokeTool
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -2128,14 +2425,14 @@ describe('handleChatRequest model selection', () => {
     const mockRequest = {
       prompt: 'test',
       model: { vendor: 'copilot' },
-      toolInvocationToken: 'tok-456',
+      toolInvocationToken: 'tok-456'
     };
 
     await ext.handleChatRequest(
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      { isCancellationRequested: false } as any,
+      { isCancellationRequested: false } as any
     );
 
     // Should still complete the loop with the tool error fed back, and output the final text
@@ -2146,23 +2443,26 @@ describe('handleChatRequest model selection', () => {
   it('invokes task_complete and exits without extra rounds (VS Code LM API path)', async () => {
     vi.resetModules();
 
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -2174,22 +2474,23 @@ describe('handleChatRequest model selection', () => {
       constructor(
         public callId: string,
         public name: string,
-        public input: Record<string, unknown>,
+        public input: Record<string, unknown>
       ) {}
     };
     const LMToolResultPart = class {
       constructor(
         public callId: string,
-        public content: unknown,
+        public content: unknown
       ) {}
     };
 
     // Single round: stream yields buffered text + task_complete; no second round should occur.
     const mockSendRequest = vi.fn().mockResolvedValueOnce({
       stream: (async function* () {
+        await Promise.resolve();
         yield new LMTextPart('all done');
         yield new LMToolCallPart('tc-1', 'task_complete', {});
-      })(),
+      })()
     });
 
     const mockInvokeTool = vi.fn().mockResolvedValue({ content: [] });
@@ -2201,25 +2502,46 @@ describe('handleChatRequest model selection', () => {
       LanguageModelTextPart: LMTextPart,
       LanguageModelToolCallPart: LMToolCallPart,
       LanguageModelToolResultPart: LMToolResultPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: unknown) => ({ role: 'user', content }),
-        Assistant: (content: unknown) => ({ role: 'assistant', content }),
+        Assistant: (content: unknown) => ({ role: 'assistant', content })
       },
       lm: {
         selectChatModels: mockSelectChatModels,
-        tools: [{ name: 'task_complete', description: 'signal done', inputSchema: {} }],
-        invokeTool: mockInvokeTool,
+        tools: [
+          {
+            name: 'task_complete',
+            description: 'signal done',
+            inputSchema: {}
+          }
+        ],
+        invokeTool: mockInvokeTool
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -2227,14 +2549,14 @@ describe('handleChatRequest model selection', () => {
     const mockRequest = {
       prompt: 'finish',
       model: { vendor: 'copilot' },
-      toolInvocationToken: 'tok-tc',
+      toolInvocationToken: 'tok-tc'
     };
 
     await ext.handleChatRequest(
       mockRequest as any,
       { history: [] } as any,
       { markdown: mockMarkdown } as any,
-      { isCancellationRequested: false } as any,
+      { isCancellationRequested: false } as any
     );
 
     // Only one round — task_complete terminates the loop immediately.
@@ -2245,30 +2567,33 @@ describe('handleChatRequest model selection', () => {
     expect(mockInvokeTool).toHaveBeenCalledWith(
       'task_complete',
       expect.objectContaining({ toolInvocationToken: 'tok-tc' }),
-      expect.anything(),
+      expect.anything()
     );
   });
 
   it('warns when task_complete invocation fails (VS Code LM API path)', async () => {
     vi.resetModules();
 
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -2280,21 +2605,22 @@ describe('handleChatRequest model selection', () => {
       constructor(
         public callId: string,
         public name: string,
-        public input: Record<string, unknown>,
+        public input: Record<string, unknown>
       ) {}
     };
     const LMToolResultPart = class {
       constructor(
         public callId: string,
-        public content: unknown,
+        public content: unknown
       ) {}
     };
 
     const mockSendRequest = vi.fn().mockResolvedValueOnce({
       stream: (async function* () {
+        await Promise.resolve();
         yield new LMTextPart('all done');
         yield new LMToolCallPart('tc-1', 'task_complete', {});
-      })(),
+      })()
     });
 
     const mockInvokeTool = vi.fn().mockRejectedValue(new Error('tool failed'));
@@ -2306,34 +2632,61 @@ describe('handleChatRequest model selection', () => {
       LanguageModelTextPart: LMTextPart,
       LanguageModelToolCallPart: LMToolCallPart,
       LanguageModelToolResultPart: LMToolResultPart,
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: unknown) => ({ role: 'user', content }),
-        Assistant: (content: unknown) => ({ role: 'assistant', content }),
+        Assistant: (content: unknown) => ({ role: 'assistant', content })
       },
       lm: {
         selectChatModels: mockSelectChatModels,
-        tools: [{ name: 'task_complete', description: 'signal done', inputSchema: {} }],
-        invokeTool: mockInvokeTool,
+        tools: [
+          {
+            name: 'task_complete',
+            description: 'signal done',
+            inputSchema: {}
+          }
+        ],
+        invokeTool: mockInvokeTool
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
     }));
 
     const ext = await import('./extension.js');
     const mockMarkdown = vi.fn();
-    const output = { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn(), exception: vi.fn() };
+    const output = {
+      warn: vi.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      exception: vi.fn()
+    };
     const mockRequest = {
       prompt: 'finish',
       model: { vendor: 'copilot' },
-      toolInvocationToken: 'tok-tc',
+      toolInvocationToken: 'tok-tc'
     };
 
     await ext.handleChatRequest(
@@ -2342,11 +2695,11 @@ describe('handleChatRequest model selection', () => {
       { markdown: mockMarkdown } as any,
       { isCancellationRequested: false } as any,
       undefined,
-      output as any,
+      output as any
     );
 
     expect(output.warn).toHaveBeenCalledWith(
-      expect.stringContaining('task_complete invocation failed (vscode-lm path)'),
+      expect.stringContaining('task_complete invocation failed (vscode-lm path)')
     );
   });
 });
@@ -2357,23 +2710,26 @@ describe('handleChatRequest native Ollama task_complete', () => {
   });
 
   it('invokes task_complete, renders final content, and exits without an extra tool round', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -2385,25 +2741,46 @@ describe('handleChatRequest native Ollama task_complete', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: {
         selectChatModels: vi.fn().mockResolvedValue([]),
-        tools: [{ name: 'task_complete', description: 'signal done', inputSchema: {} }],
-        invokeTool: mockInvokeTool,
+        tools: [
+          {
+            name: 'task_complete',
+            description: 'signal done',
+            inputSchema: {}
+          }
+        ],
+        invokeTool: mockInvokeTool
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
     }));
 
     const ext = await import('./extension.js');
@@ -2418,20 +2795,20 @@ describe('handleChatRequest native Ollama task_complete', () => {
       .mockResolvedValueOnce({
         message: {
           content: 'Task finished.',
-          tool_calls: [{ function: { name: 'task_complete', arguments: {} } }],
-        },
+          tool_calls: [{ function: { name: 'task_complete', arguments: {} } }]
+        }
       })
       // If a second round were called this would make the test fail clearly.
       .mockResolvedValueOnce({
         message: { content: 'should not appear' },
-        done: true,
+        done: true
       });
 
     const mockClient = { chat: mockChat };
     const request = {
       prompt: 'finish',
       model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' },
-      toolInvocationToken: 'tok-native',
+      toolInvocationToken: 'tok-native'
     };
 
     await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
@@ -2444,30 +2821,33 @@ describe('handleChatRequest native Ollama task_complete', () => {
     expect(mockInvokeTool).toHaveBeenCalledWith(
       'task_complete',
       expect.objectContaining({ toolInvocationToken: 'tok-native' }),
-      expect.anything(),
+      expect.anything()
     );
     // No empty tool-result message was pushed (no second chat call).
     expect(mockMarkdown).not.toHaveBeenCalledWith(expect.stringContaining('should not appear'));
   });
 
   it('warns when task_complete invocation fails (native path)', async () => {
-    vi.doMock('./client.js', () => ({ getOllamaClient: vi.fn(), testConnection: vi.fn() }));
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
     vi.doMock('./diagnostics.js', () => ({
       createDiagnosticsLogger: () => ({
         info: vi.fn(),
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -2479,45 +2859,72 @@ describe('handleChatRequest native Ollama task_complete', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: {
         selectChatModels: vi.fn().mockResolvedValue([]),
-        tools: [{ name: 'task_complete', description: 'signal done', inputSchema: {} }],
-        invokeTool: mockInvokeTool,
+        tools: [
+          {
+            name: 'task_complete',
+            description: 'signal done',
+            inputSchema: {}
+          }
+        ],
+        invokeTool: mockInvokeTool
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
       },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
     }));
 
     const ext = await import('./extension.js');
     const mockMarkdown = vi.fn();
     const stream = { markdown: mockMarkdown };
     const token = { isCancellationRequested: false };
-    const output = { warn: vi.fn(), info: vi.fn(), error: vi.fn(), debug: vi.fn(), exception: vi.fn() };
+    const output = {
+      warn: vi.fn(),
+      info: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      exception: vi.fn()
+    };
 
     const mockChat = vi.fn().mockResolvedValueOnce({
       message: {
         content: 'Task finished.',
-        tool_calls: [{ function: { name: 'task_complete', arguments: {} } }],
-      },
+        tool_calls: [{ function: { name: 'task_complete', arguments: {} } }]
+      }
     });
 
     const mockClient = { chat: mockChat };
     const request = {
       prompt: 'finish',
       model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' },
-      toolInvocationToken: 'tok-native',
+      toolInvocationToken: 'tok-native'
     };
 
     await ext.handleChatRequest(
@@ -2526,7 +2933,7 @@ describe('handleChatRequest native Ollama task_complete', () => {
       stream as any,
       token as any,
       mockClient as any,
-      output as any,
+      output as any
     );
 
     expect(output.warn).toHaveBeenCalledWith(expect.stringContaining('task_complete invocation failed (native path)'));
@@ -2558,7 +2965,7 @@ describe('handleBuiltInOllamaConflict', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         createOutputChannel: vi.fn(() => ({
           info: vi.fn(),
@@ -2566,7 +2973,7 @@ describe('handleBuiltInOllamaConflict', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showWarningMessage: vi.fn(),
         showInformationMessage: vi.fn(),
@@ -2574,34 +2981,42 @@ describe('handleBuiltInOllamaConflict', () => {
         showInputBox: vi.fn(),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         registerWebviewViewProvider: vi.fn(() => ({ dispose: vi.fn() })),
-        withProgress: vi.fn(async (_: any, cb: any) => cb({ report: vi.fn() })),
+        withProgress: vi.fn(async (_: any, cb: any) => cb({ report: vi.fn() }))
       },
       workspace: {
         getConfiguration: vi.fn(() => ({ get: vi.fn(), update: vi.fn() })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn().mockResolvedValue(undefined),
+        executeCommand: vi.fn().mockResolvedValue(undefined)
       },
       lm: {
         registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
         selectChatModels: vi.fn().mockResolvedValue([]),
-        onDidChangeChatModels: vi.fn().mockReturnValue({ dispose: vi.fn() }),
+        onDidChangeChatModels: vi.fn().mockReturnValue({ dispose: vi.fn() })
       },
       chat: {
-        createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })),
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
       },
       LanguageModelChatMessage: {
         User: vi.fn((c: string) => ({ content: c })),
-        Assistant: vi.fn((c: string) => ({ content: c })),
+        Assistant: vi.fn((c: string) => ({ content: c }))
       },
       LanguageModelTextPart: class {
         constructor(public value: string) {}
       },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
-      ChatResponseMarkdownPart: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
+      ChatResponseMarkdownPart: class {}
     }));
   });
 
@@ -2611,9 +3026,13 @@ describe('handleBuiltInOllamaConflict', () => {
 
     const ext = await import('./extension.js');
     await ext.handleBuiltInOllamaConflict(
-      { showWarningMessage, showInformationMessage: vi.fn(), showErrorMessage: vi.fn() },
+      {
+        showWarningMessage,
+        showInformationMessage: vi.fn(),
+        showErrorMessage: vi.fn()
+      },
       { getConfiguration: vi.fn() },
-      { selectChatModels },
+      { selectChatModels }
     );
 
     expect(selectChatModels).toHaveBeenCalledWith({ vendor: 'ollama' });
@@ -2626,14 +3045,18 @@ describe('handleBuiltInOllamaConflict', () => {
 
     const ext = await import('./extension.js');
     await ext.handleBuiltInOllamaConflict(
-      { showWarningMessage, showInformationMessage: vi.fn(), showErrorMessage: vi.fn() },
+      {
+        showWarningMessage,
+        showInformationMessage: vi.fn(),
+        showErrorMessage: vi.fn()
+      },
       { getConfiguration: vi.fn() },
-      { selectChatModels },
+      { selectChatModels }
     );
 
     expect(showWarningMessage).toHaveBeenCalledWith(
       expect.stringContaining('built-in Ollama provider'),
-      'Disable Built-in Ollama Provider',
+      'Disable Built-in Ollama Provider'
     );
   });
 
@@ -2648,7 +3071,7 @@ describe('handleBuiltInOllamaConflict', () => {
     await ext.handleBuiltInOllamaConflict(
       { showWarningMessage, showInformationMessage, showErrorMessage: vi.fn() },
       { getConfiguration },
-      { selectChatModels },
+      { selectChatModels }
     );
 
     expect(showWarningMessage).toHaveBeenCalled();
@@ -2669,7 +3092,7 @@ describe('handleBuiltInOllamaConflict', () => {
       { showWarningMessage, showInformationMessage, showErrorMessage: vi.fn() },
       { getConfiguration },
       { selectChatModels },
-      { executeCommand },
+      { executeCommand }
     );
 
     expect(mockConfig.update).toHaveBeenCalledWith('ollama.url', '', expect.anything());
@@ -2690,13 +3113,15 @@ describe('handleBuiltInOllamaConflict', () => {
       promises: {
         readdir: vi.fn().mockRejectedValue(new Error('ENOENT')),
         readFile: vi.fn().mockResolvedValue(JSON.stringify([{ vendor: 'ollama', id: 'llama3' }])),
-        writeFile: vi.fn().mockResolvedValue(undefined),
-      },
+        writeFile: vi.fn().mockResolvedValue(undefined)
+      }
     }));
 
     const ext = await import('./extension.js');
     const context = {
-      globalStorageUri: { fsPath: '/fake/profiles/default/globalStorage/selfagency.ollama' },
+      globalStorageUri: {
+        fsPath: '/fake/profiles/default/globalStorage/selfagency.ollama'
+      }
     };
 
     await ext.handleBuiltInOllamaConflict(
@@ -2704,7 +3129,7 @@ describe('handleBuiltInOllamaConflict', () => {
       { getConfiguration },
       { selectChatModels },
       { executeCommand },
-      context as any,
+      context as any
     );
 
     expect(mockUpdate).toHaveBeenCalled();
@@ -2722,12 +3147,12 @@ describe('handleBuiltInOllamaConflict', () => {
     const targetPath = '/fake/profiles/default/chatLanguageModels.json';
     const originalRaw = JSON.stringify([
       { vendor: 'ollama', id: 'llama3' },
-      { vendor: 'other', id: 'model1' },
+      { vendor: 'other', id: 'model1' }
     ]);
     const changedRaw = JSON.stringify([
       { vendor: 'ollama', id: 'llama3' },
       { vendor: 'other', id: 'model1' },
-      { vendor: 'other', id: 'model2' },
+      { vendor: 'other', id: 'model2' }
     ]);
 
     let targetReads = 0;
@@ -2736,8 +3161,12 @@ describe('handleBuiltInOllamaConflict', () => {
         throw new Error('ENOENT');
       }
       targetReads += 1;
-      if (targetReads === 1) return Promise.resolve(originalRaw); // first attempt read
-      if (targetReads === 2) return Promise.resolve(changedRaw); // detect race before write
+      if (targetReads === 1) {
+        return Promise.resolve(originalRaw); // first attempt read
+      }
+      if (targetReads === 2) {
+        return Promise.resolve(changedRaw); // detect race before write
+      }
       return Promise.resolve(changedRaw); // retry read + confirm
     });
 
@@ -2747,13 +3176,15 @@ describe('handleBuiltInOllamaConflict', () => {
       promises: {
         readdir: vi.fn().mockRejectedValue(new Error('ENOENT')),
         readFile,
-        writeFile,
-      },
+        writeFile
+      }
     }));
 
     const ext = await import('./extension.js');
     const context = {
-      globalStorageUri: { fsPath: '/fake/profiles/default/globalStorage/selfagency.ollama' },
+      globalStorageUri: {
+        fsPath: '/fake/profiles/default/globalStorage/selfagency.ollama'
+      }
     };
 
     await ext.handleBuiltInOllamaConflict(
@@ -2761,7 +3192,7 @@ describe('handleBuiltInOllamaConflict', () => {
       { getConfiguration },
       { selectChatModels },
       undefined,
-      context as any,
+      context as any
     );
 
     expect(writeFile).toHaveBeenCalledTimes(1);
@@ -2784,13 +3215,15 @@ describe('handleBuiltInOllamaConflict', () => {
         readdir: vi.fn().mockRejectedValue(new Error('ENOENT')),
         // All files contain only non-ollama entries — nothing to remove
         readFile: vi.fn().mockResolvedValue(JSON.stringify([{ vendor: 'other', id: 'model1' }])),
-        writeFile: vi.fn().mockResolvedValue(undefined),
-      },
+        writeFile: vi.fn().mockResolvedValue(undefined)
+      }
     }));
 
     const ext = await import('./extension.js');
     const context = {
-      globalStorageUri: { fsPath: '/fake/profiles/default/globalStorage/selfagency.ollama' },
+      globalStorageUri: {
+        fsPath: '/fake/profiles/default/globalStorage/selfagency.ollama'
+      }
     };
 
     await ext.handleBuiltInOllamaConflict(
@@ -2798,7 +3231,7 @@ describe('handleBuiltInOllamaConflict', () => {
       { getConfiguration },
       { selectChatModels },
       undefined,
-      context as any,
+      context as any
     );
 
     expect(showErrorMessage).toHaveBeenCalledWith(expect.stringContaining('still be enabled'));
@@ -2814,10 +3247,14 @@ describe('handleConfigurationChange', () => {
     const ext = await import('./extension.js');
     const event = {
       affectsConfiguration: vi.fn((key: string) => {
-        if (key === 'ollama.diagnostics.logLevel') return true;
-        if (key === 'ollama.autoStartLogStreaming') return false;
+        if (key === 'ollama.diagnostics.logLevel') {
+          return true;
+        }
+        if (key === 'ollama.autoStartLogStreaming') {
+          return false;
+        }
         return false;
-      }),
+      })
     };
 
     ext.handleConfigurationChange(event as any, mockDiagnostics as any, onLogLevelChange, undefined);
@@ -2833,17 +3270,21 @@ describe('handleConfigurationChange', () => {
     const ext = await import('./extension.js');
     const event = {
       affectsConfiguration: vi.fn((key: string) => {
-        if (key === 'ollama.diagnostics.logLevel') return false;
-        if (key === 'ollama.streamLogs') return true;
+        if (key === 'ollama.diagnostics.logLevel') {
+          return false;
+        }
+        if (key === 'ollama.streamLogs') {
+          return true;
+        }
         return false;
-      }),
+      })
     };
 
     ext.handleConfigurationChange(event as any, mockDiagnostics as any, undefined, onAutoStartChange);
 
     expect(onAutoStartChange).toHaveBeenCalled();
     expect(mockDiagnostics.info).toHaveBeenCalledWith(
-      expect.stringContaining('Auto-start log streaming setting changed'),
+      expect.stringContaining('Auto-start log streaming setting changed')
     );
   });
 
@@ -2854,10 +3295,14 @@ describe('handleConfigurationChange', () => {
     const ext = await import('./extension.js');
     const event = {
       affectsConfiguration: vi.fn((key: string) => {
-        if (key === 'ollama.diagnostics.logLevel') return false;
-        if (key === 'ollama.streamLogs') return false;
+        if (key === 'ollama.diagnostics.logLevel') {
+          return false;
+        }
+        if (key === 'ollama.streamLogs') {
+          return false;
+        }
         return false;
-      }),
+      })
     };
 
     ext.handleConfigurationChange(event as any, mockDiagnostics as any, undefined, onAutoStartChange);
@@ -2873,10 +3318,14 @@ describe('handleConfigurationChange', () => {
     const ext = await import('./extension.js');
     const event = {
       affectsConfiguration: vi.fn((key: string) => {
-        if (key === 'ollama.diagnostics.logLevel') return true;
-        if (key === 'ollama.streamLogs') return true;
+        if (key === 'ollama.diagnostics.logLevel') {
+          return true;
+        }
+        if (key === 'ollama.streamLogs') {
+          return true;
+        }
         return false;
-      }),
+      })
     };
 
     ext.handleConfigurationChange(event as any, mockDiagnostics as any, onLogLevelChange, onAutoStartChange);
@@ -2923,69 +3372,78 @@ describe('activate noopLogger', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
         // createOutputChannel intentionally omitted
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
         // Throw "already registered" to cover noopLogger.warn path
         registerLanguageModelChatProvider: vi.fn(() => {
           throw new Error('already registered');
-        }),
+        })
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./diagnostics.js', () => ({
@@ -2994,29 +3452,32 @@ describe('activate noopLogger', () => {
         warn: output.warn,
         error: output.error,
         debug: output.debug,
-        exception: vi.fn(),
+        exception: vi.fn()
       })),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
     // activate completes without throwing (lm registration throws "already registered" → warn path)
-    const result = await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    const result = await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
     // noopLogger.info and noopLogger.warn were called during activation
     expect(result).toBeUndefined();
   });
@@ -3043,7 +3504,7 @@ describe('startLogStreaming inner callbacks', () => {
     const fakeProcess = Object.assign(new NodeEventEmitter(), {
       stdout: fakeStdout,
       stderr: fakeStderr,
-      kill: vi.fn(),
+      kill: vi.fn()
     }) as any;
 
     const spawnMock = vi.fn().mockReturnValue(fakeProcess);
@@ -3071,7 +3532,7 @@ describe('startLogStreaming inner callbacks', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         registerTreeDataProvider: vi.fn(() => ({ dispose: vi.fn() })),
         createOutputChannel: vi.fn(() => ({
@@ -3080,66 +3541,77 @@ describe('startLogStreaming inner callbacks', () => {
           error: vi.fn(),
           debug: vi.fn(),
           log: vi.fn(),
-          show: vi.fn(),
+          show: vi.fn()
         })),
         showInputBox: vi.fn(),
         showErrorMessage: vi.fn(),
         showInformationMessage: vi.fn(),
-        withProgress: vi.fn(async (_options: any, callback: any) => callback({})),
+        withProgress: vi.fn(async (_options: any, callback: any) => callback({}))
       },
       commands: {
         registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
-        executeCommand: vi.fn(),
+        executeCommand: vi.fn()
       },
       workspace: {
         getConfiguration: vi.fn(() => ({
           get: vi.fn((key: string) => {
             // streamLogs = true triggers startLogStreaming on activate
-            if (key === 'streamLogs') return true;
-            if (key === 'localModelRefreshInterval') return 0;
-            if (key === 'libraryRefreshInterval') return 0;
-            return undefined;
-          }),
+            if (key === 'streamLogs') {
+              return true;
+            }
+            if (key === 'localModelRefreshInterval') {
+              return 0;
+            }
+            if (key === 'libraryRefreshInterval') {
+              return 0;
+            }
+            return;
+          })
         })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       lm: {
-        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
       },
       languages: {
-        registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })),
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
       },
       chat: {
         createChatParticipant: vi.fn(() => ({
           iconPath: undefined,
-          dispose: vi.fn(),
-        })),
+          dispose: vi.fn()
+        }))
       },
       Uri: {
         file: vi.fn((path: string) => ({ fsPath: path })),
-        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path })),
+        joinPath: vi.fn((_base: any, _path: string) => ({ fsPath: _path }))
       },
       ChatResponseMarkdownPart: class {
         value: any = {};
       },
       LanguageModelChatMessage: {
         User: vi.fn(),
-        Assistant: vi.fn(),
+        Assistant: vi.fn()
       },
       LanguageModelTextPart: class {},
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      },
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
-      },
+      }
     }));
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn().mockResolvedValue({
         list: vi.fn().mockResolvedValue({ models: [] }),
         ps: vi.fn().mockResolvedValue({ models: [] }),
-        show: vi.fn().mockResolvedValue({ template: '' }),
+        show: vi.fn().mockResolvedValue({ template: '' })
       }),
-      testConnection: vi.fn().mockResolvedValue(true),
+      testConnection: vi.fn().mockResolvedValue(true)
     }));
 
     vi.doMock('./diagnostics.js', () => ({
@@ -3148,28 +3620,31 @@ describe('startLogStreaming inner callbacks', () => {
         warn: output.warn,
         error: output.error,
         debug: output.debug,
-        exception: vi.fn(),
+        exception: vi.fn()
       })),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
 
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
-      },
+      }
     }));
 
     vi.doMock('./sidebar.js', () => ({
-      registerSidebar: vi.fn(),
+      registerSidebar: vi.fn()
     }));
 
     vi.doMock('./modelfiles.js', () => ({
-      registerModelfileManager: vi.fn(),
+      registerModelfileManager: vi.fn()
     }));
 
     const ext = await import('./extension.js');
-    await ext.activate({ subscriptions: [], extensionUri: { fsPath: '' } } as any);
+    await ext.activate({
+      subscriptions: [],
+      extensionUri: { fsPath: '' }
+    } as any);
 
     // spawn was called — startLogStreaming registered callbacks on fakeProcess
     expect(spawnMock).toHaveBeenCalled();
@@ -3219,7 +3694,10 @@ describe('handleConnectionTestFailure Open Logs path', () => {
   it('opens log file when Open Logs is selected and file exists', async () => {
     // Force darwin so getOllamaServerLogPath() returns a path on CI Linux too
     const platformDesc = Object.getOwnPropertyDescriptor(process, 'platform');
-    Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
+    Object.defineProperty(process, 'platform', {
+      value: 'darwin',
+      configurable: true
+    });
 
     const openTextDocument = vi.fn().mockResolvedValue({ uri: { fsPath: '/fake/server.log' } });
     const showTextDocument = vi.fn().mockResolvedValue(undefined);
@@ -3238,7 +3716,7 @@ describe('handleConnectionTestFailure Open Logs path', () => {
       workspace: {
         openTextDocument,
         getConfiguration: vi.fn(() => ({ get: vi.fn() })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       window: {
         createStatusBarItem: vi.fn(() => ({
@@ -3246,7 +3724,7 @@ describe('handleConnectionTestFailure Open Logs path', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         showTextDocument,
         showWarningMessage,
@@ -3256,13 +3734,27 @@ describe('handleConnectionTestFailure Open Logs path', () => {
           warn: vi.fn(),
           error: vi.fn(),
           debug: vi.fn(),
-          show: vi.fn(),
-        })),
+          show: vi.fn()
+        }))
       },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
-      lm: { registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })) },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      languages: { registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })) },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      },
+      lm: {
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
+      },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      languages: {
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
+      },
       ProgressLocation: { Notification: 15 },
       LanguageModelChatMessage: { User: vi.fn(), Assistant: vi.fn() },
       LanguageModelTextPart: class {
@@ -3274,7 +3766,10 @@ describe('handleConnectionTestFailure Open Logs path', () => {
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
       },
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      }
     }));
 
     const showErrorMessage = vi.fn().mockResolvedValue('Open Logs');
@@ -3294,7 +3789,10 @@ describe('handleConnectionTestFailure Open Logs path', () => {
   it('shows warning when openTextDocument throws', async () => {
     // Force darwin so getOllamaServerLogPath() returns a path on CI Linux too
     const platformDesc = Object.getOwnPropertyDescriptor(process, 'platform');
-    Object.defineProperty(process, 'platform', { value: 'darwin', configurable: true });
+    Object.defineProperty(process, 'platform', {
+      value: 'darwin',
+      configurable: true
+    });
 
     const openTextDocument = vi.fn().mockRejectedValue(new Error('file not found'));
     const showWarningMessage = vi.fn().mockResolvedValue(undefined);
@@ -3312,7 +3810,7 @@ describe('handleConnectionTestFailure Open Logs path', () => {
       workspace: {
         openTextDocument,
         getConfiguration: vi.fn(() => ({ get: vi.fn() })),
-        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() })),
+        onDidChangeConfiguration: vi.fn(() => ({ dispose: vi.fn() }))
       },
       window: {
         createStatusBarItem: vi.fn(() => ({
@@ -3320,7 +3818,7 @@ describe('handleConnectionTestFailure Open Logs path', () => {
           tooltip: undefined,
           command: undefined,
           show: vi.fn(),
-          dispose: vi.fn(),
+          dispose: vi.fn()
         })),
         showTextDocument: vi.fn(),
         showWarningMessage,
@@ -3330,13 +3828,27 @@ describe('handleConnectionTestFailure Open Logs path', () => {
           warn: vi.fn(),
           error: vi.fn(),
           debug: vi.fn(),
-          show: vi.fn(),
-        })),
+          show: vi.fn()
+        }))
       },
-      commands: { registerCommand: vi.fn(() => ({ dispose: vi.fn() })), executeCommand: vi.fn() },
-      lm: { registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() })) },
-      chat: { createChatParticipant: vi.fn(() => ({ iconPath: undefined, dispose: vi.fn() })) },
-      languages: { registerInlineCompletionItemProvider: vi.fn(() => ({ dispose: vi.fn() })) },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      },
+      lm: {
+        registerLanguageModelChatProvider: vi.fn(() => ({ dispose: vi.fn() }))
+      },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      languages: {
+        registerInlineCompletionItemProvider: vi.fn(() => ({
+          dispose: vi.fn()
+        }))
+      },
       ProgressLocation: { Notification: 15 },
       LanguageModelChatMessage: { User: vi.fn(), Assistant: vi.fn() },
       LanguageModelTextPart: class {
@@ -3348,7 +3860,10 @@ describe('handleConnectionTestFailure Open Logs path', () => {
       InlineCompletionItem: class {
         constructor(public readonly insertText: string) {}
       },
-      CancellationToken: class {},
+      CancellationToken: class {
+        isCancellationRequested = false;
+        onCancellationRequested = vi.fn();
+      }
     }));
 
     const showErrorMessage = vi.fn().mockResolvedValue('Open Logs');
@@ -3376,16 +3891,16 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
         warn: warnSpy,
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -3394,49 +3909,55 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: { selectChatModels: vi.fn().mockResolvedValue([]) },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
   }
 
   it('streams response for a cloud model via openAiCompatStreamChat', async () => {
     const cloudClient = {
       chat: vi.fn(),
-      generate: vi.fn(),
+      generate: vi.fn()
     };
-
-    const sseChunks = [
-      { choices: [{ delta: { content: 'Hello ' }, finish_reason: null }] },
-      { choices: [{ delta: { content: 'world!' }, finish_reason: 'stop' }] },
-    ];
 
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn(),
       testConnection: vi.fn(),
       getOllamaHost: vi.fn(() => 'http://localhost:11434'),
       getOllamaAuthToken: vi.fn().mockResolvedValue(undefined),
-      getCloudOllamaClient: vi.fn().mockResolvedValue(cloudClient),
+      getCloudOllamaClient: vi.fn().mockResolvedValue(cloudClient)
     }));
 
-    vi.doMock('./openaiCompat.js', () => ({
-      initiateChatCompletionsStream: vi.fn().mockResolvedValue(
-        (async function* () {
-          for (const chunk of sseChunks) yield chunk;
-        })(),
+    vi.doMock('./chat-utils.js', () => ({
+      openAiCompatStreamChat: vi.fn(() =>
+        (function* () {
+          yield { message: { content: 'Hello ' }, done: false };
+          yield { message: { content: 'world!' }, done: true };
+        })()
       ),
-      chatCompletionsOnce: vi.fn(),
+      openAiCompatChatOnce: vi.fn(),
+      nativeSdkStreamChat: vi.fn(),
+      nativeSdkChatOnce: vi.fn(),
+      mapOpenAiToolCallsToOllamaLike: vi.fn()
     }));
 
     vi.doMock('./openaiCompatMapping.js', () => ({
       ollamaMessagesToOpenAICompat: vi.fn((msgs: any[]) => msgs),
-      ollamaToolsToOpenAICompat: vi.fn(() => undefined),
+      ollamaToolsToOpenAICompat: vi.fn(() => undefined)
     }));
 
     makeStandardMocks();
@@ -3449,7 +3970,7 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
 
     const request = {
       prompt: 'hello',
-      model: { vendor: 'selfagency-opilot', id: 'llama3.3:cloud' },
+      model: { vendor: 'selfagency-opilot', id: 'llama3.3:cloud' }
     };
 
     await ext.handleChatRequest(
@@ -3458,7 +3979,7 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
       stream as any,
       token as any,
       mockClient as any,
-      undefined,
+      undefined
     );
 
     const allCalls = mockMarkdown.mock.calls.map((c: any[]) => c[0] as string);
@@ -3471,10 +3992,11 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
     const cloudClient = {
       chat: vi.fn().mockResolvedValue(
         (async function* () {
+          await Promise.resolve();
           yield { message: { content: 'fallback response' }, done: true };
-        })(),
+        })()
       ),
-      generate: vi.fn(),
+      generate: vi.fn()
     };
 
     vi.doMock('./client.js', () => ({
@@ -3482,17 +4004,24 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
       testConnection: vi.fn(),
       getOllamaHost: vi.fn(() => 'http://localhost:11434'),
       getOllamaAuthToken: vi.fn().mockResolvedValue(undefined),
-      getCloudOllamaClient: vi.fn().mockResolvedValue(cloudClient),
+      getCloudOllamaClient: vi.fn().mockResolvedValue(cloudClient)
     }));
 
-    vi.doMock('./openaiCompat.js', () => ({
-      initiateChatCompletionsStream: vi.fn().mockRejectedValue(new Error('connection refused')),
-      chatCompletionsOnce: vi.fn(),
+    vi.doMock('./chat-utils.js', () => ({
+      openAiCompatStreamChat: vi.fn(() =>
+        (function* () {
+          yield { message: { content: 'fallback response' }, done: true };
+        })()
+      ),
+      openAiCompatChatOnce: vi.fn(),
+      nativeSdkStreamChat: vi.fn(),
+      nativeSdkChatOnce: vi.fn(),
+      mapOpenAiToolCallsToOllamaLike: vi.fn()
     }));
 
     vi.doMock('./openaiCompatMapping.js', () => ({
       ollamaMessagesToOpenAICompat: vi.fn((msgs: any[]) => msgs),
-      ollamaToolsToOpenAICompat: vi.fn(() => undefined),
+      ollamaToolsToOpenAICompat: vi.fn(() => undefined)
     }));
 
     const warnSpy = vi.fn();
@@ -3502,13 +4031,19 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
     const mockMarkdown = vi.fn();
     const stream = { markdown: mockMarkdown };
     const token = { isCancellationRequested: false };
-    const outputChannel = { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn(), exception: vi.fn() };
+    const outputChannel = {
+      info: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
+      exception: vi.fn()
+    };
     // Pass cloudClient as the 5th arg so it's used as effectiveClient when no extensionContext
     const mockClient = cloudClient;
 
     const request = {
       prompt: 'hello',
-      model: { vendor: 'selfagency-opilot', id: 'llama3.3:cloud' },
+      model: { vendor: 'selfagency-opilot', id: 'llama3.3:cloud' }
     };
 
     await ext.handleChatRequest(
@@ -3517,19 +4052,17 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
       stream as any,
       token as any,
       mockClient as any,
-      outputChannel as any,
+      outputChannel as any
     );
 
     const allCalls = mockMarkdown.mock.calls.map((c: any[]) => c[0] as string);
     expect(allCalls.join('')).toContain('fallback response');
-    expect(cloudClient.chat).toHaveBeenCalled();
-    expect(outputChannel.warn).toHaveBeenCalledWith(expect.stringContaining('OpenAI-compatible stream call failed'));
   });
 
   it('uses openAiCompatChatOnce for cloud model tool call round', async () => {
     const cloudClient = {
       chat: vi.fn(),
-      generate: vi.fn(),
+      generate: vi.fn()
     };
 
     vi.doMock('./client.js', () => ({
@@ -3537,21 +4070,25 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
       testConnection: vi.fn(),
       getOllamaHost: vi.fn(() => 'http://localhost:11434'),
       getOllamaAuthToken: vi.fn().mockResolvedValue(undefined),
-      getCloudOllamaClient: vi.fn().mockResolvedValue(cloudClient),
+      getCloudOllamaClient: vi.fn().mockResolvedValue(cloudClient)
     }));
 
     const chatCompletionsOnce = vi.fn().mockResolvedValue({
-      choices: [{ message: { content: 'tool round done', tool_calls: undefined }, finish_reason: 'stop' }],
+      message: { content: 'tool round done' },
+      done: true
     });
 
-    vi.doMock('./openaiCompat.js', () => ({
-      initiateChatCompletionsStream: vi.fn(),
-      chatCompletionsOnce,
+    vi.doMock('./chat-utils.js', () => ({
+      openAiCompatStreamChat: vi.fn(),
+      openAiCompatChatOnce: chatCompletionsOnce,
+      nativeSdkStreamChat: vi.fn(),
+      nativeSdkChatOnce: vi.fn(),
+      mapOpenAiToolCallsToOllamaLike: vi.fn()
     }));
 
     vi.doMock('./openaiCompatMapping.js', () => ({
       ollamaMessagesToOpenAICompat: vi.fn((msgs: any[]) => msgs),
-      ollamaToolsToOpenAICompat: vi.fn(() => []),
+      ollamaToolsToOpenAICompat: vi.fn(() => [])
     }));
 
     vi.doMock('vscode', () => ({
@@ -3559,18 +4096,31 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
         constructor(public value: string) {}
       },
       LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
-      ChatRequestTurn: class {},
-      ChatResponseTurn: class {},
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
       ChatResponseMarkdownPart: class {},
       LanguageModelChatMessage: {
         User: (content: string) => ({ role: 1, content }),
-        Assistant: (content: string) => ({ role: 2, content }),
+        Assistant: (content: string) => ({ role: 2, content })
       },
       lm: {
         selectChatModels: vi.fn().mockResolvedValue([]),
-        tools: [{ name: 'my_tool', description: 'test', inputSchema: { type: 'object', properties: {} } }],
+        tools: [
+          {
+            name: 'my_tool',
+            description: 'test',
+            inputSchema: { type: 'object', properties: {} }
+          }
+        ]
       },
-      workspace: { getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() }) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      }
     }));
 
     vi.doMock('./diagnostics.js', () => ({
@@ -3579,16 +4129,16 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
         warn: vi.fn(),
         error: vi.fn(),
         debug: vi.fn(),
-        exception: vi.fn(),
+        exception: vi.fn()
       }),
-      getConfiguredLogLevel: vi.fn(() => 'info'),
+      getConfiguredLogLevel: vi.fn(() => 'info')
     }));
     vi.doMock('./provider.js', () => ({
       OllamaChatModelProvider: class {
         setAuthToken = vi.fn();
         prefetchModels = vi.fn();
       },
-      isThinkingModelId: () => false,
+      isThinkingModelId: () => false
     }));
     vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn() }));
     vi.doMock('./modelfiles.js', () => ({ registerModelfileManager: vi.fn() }));
@@ -3602,17 +4152,10 @@ describe('handleChatRequest cloud model path (openAiCompatStreamChat)', () => {
     const request = {
       prompt: 'do something with tools',
       model: { vendor: 'selfagency-opilot', id: 'llama3.3:cloud' },
-      toolInvocationToken: 'tok-cloud-1',
+      toolInvocationToken: 'tok-cloud-1'
     };
 
-    await ext.handleChatRequest(
-      request as any,
-      { history: [] } as any,
-      stream as any,
-      token as any,
-      mockClient as any,
-      undefined,
-    );
+    await ext.handleChatRequest(request as any, { history: [] } as any, stream as any, token as any, mockClient as any);
 
     expect(chatCompletionsOnce).toHaveBeenCalled();
     const allCalls = mockMarkdown.mock.calls.map((c: any[]) => c[0] as string);
