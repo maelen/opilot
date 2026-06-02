@@ -20,7 +20,7 @@ import {
   window,
   workspace
 } from 'vscode';
-import { fetchModelCapabilities, getCloudOllamaClient, type ModelCapabilities } from './client.js';
+import { fetchModelCapabilities, getCloudOllamaClient, getOllamaAuthToken, type ModelCapabilities } from './client.js';
 import type { DiagnosticsLogger } from './diagnostics.js';
 import { reportError } from './error-handler.js';
 import { isThinkingModelId } from './provider.js';
@@ -2551,14 +2551,19 @@ export class CloudModelsProvider implements TreeDataProvider<ModelTreeItem>, Dis
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
+    const authToken = await getOllamaAuthToken(this.context);
+    const authHeaders: Record<string, string> = authToken ? { Authorization: `Bearer ${authToken}` } : {};
+
     try {
       const [tagsResponse, libraryResponse] = await Promise.all([
         fetch('https://ollama.com/api/tags', {
           method: 'GET',
+          headers: authHeaders,
           signal: controller.signal
         }),
         fetch('https://ollama.com/search?c=cloud', {
           method: 'GET',
+          headers: authHeaders,
           signal: controller.signal
         })
       ]);
@@ -2765,8 +2770,12 @@ export function handleRefreshLibrary(libraryProvider: LibraryModelsProvider): vo
 /**
  * Command handler: refresh cloud models
  */
-export function handleRefreshCloudModels(cloudProvider: CloudModelsProvider): void {
+export function handleRefreshCloudModels(
+  cloudProvider: CloudModelsProvider,
+  onCloudModelsChanged?: () => void
+): void {
   cloudProvider.refresh();
+  onCloudModelsChanged?.();
   window.showInformationMessage('Cloud models refreshed');
 }
 
@@ -2777,9 +2786,11 @@ export async function handleManageCloudApiKey(
   _context: ExtensionContext,
   _cloudProvider: CloudModelsProvider,
   _libraryProvider: LibraryModelsProvider,
-  _logChannel?: DiagnosticsLogger
+  _logChannel?: DiagnosticsLogger,
+  onCloudModelsChanged?: () => void
 ): Promise<void> {
   // Back-compat shim: old command now routes to login flow.
+  onCloudModelsChanged?.();
   handleLoginToCloud();
 }
 
@@ -3121,7 +3132,8 @@ export function registerSidebar(
   context: ExtensionContext,
   client: Ollama,
   logChannel?: DiagnosticsLogger,
-  onLocalModelsChanged?: () => void
+  onLocalModelsChanged?: () => void,
+  onCloudModelsChanged?: () => void
 ): SidebarRegistration {
   hydrateModelPreviewCacheFromStorage(context);
 
@@ -3304,9 +3316,9 @@ export function registerSidebar(
     commands.registerCommand('opilot.refreshSidebar', () => handleRefreshLocalModels(localProvider)),
     commands.registerCommand('opilot.refreshLocalModels', () => handleRefreshLocalModels(localProvider)),
     commands.registerCommand('opilot.refreshLibrary', () => handleRefreshLibrary(libraryProvider)),
-    commands.registerCommand('opilot.refreshCloudModels', () => handleRefreshCloudModels(cloudProvider)),
+    commands.registerCommand('opilot.refreshCloudModels', () => handleRefreshCloudModels(cloudProvider, onCloudModelsChanged)),
     commands.registerCommand('opilot.manageCloudApiKey', async () =>
-      handleManageCloudApiKey(context, cloudProvider, libraryProvider, logChannel)
+      handleManageCloudApiKey(context, cloudProvider, libraryProvider, logChannel, onCloudModelsChanged)
     ),
     commands.registerCommand('opilot.loginCloud', () => handleLoginToCloud()),
     commands.registerCommand('opilot.openCloudModel', (item: ModelTreeItem) => handleOpenCloudModel(item)),
