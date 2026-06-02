@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2026-06-02
+
+## What's Changed
+
+- fix: eagerly register sidebar providers before async activation by @selfagency in https://github.com/selfagency/opilot/pull/114
+
+**Full Changelog**: https://github.com/selfagency/opilot/compare/v1.7.1...v1.7.2
+
+_Source: changes from v1.7.1 to v1.7.2._
+
 ## [1.7.1] - 2026-06-02
 
 ## What's Changed
