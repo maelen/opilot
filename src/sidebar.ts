@@ -892,6 +892,10 @@ export class LocalModelsProvider implements TreeDataProvider<ModelTreeItem>, Dis
 
   private async getLocalModels(): Promise<ModelTreeItem[]> {
     try {
+      // If client is not yet initialized (during eager registration), show initializing state
+      if (!this.client) {
+        return [makeStatusItem('Initializing...')];
+      }
       this.logChannel?.debug('[client] loading local models via list() and ps()...');
       const [listResponse, psResponse] = await Promise.all([this.getClient().list(), this.getClient().ps()]);
 
