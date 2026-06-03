@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.3] - 2026-06-03
+
+## What's Changed
+
+- fix/eager view provider registration by @selfagency in https://github.com/selfagency/opilot/pull/117
+
+**Full Changelog**: https://github.com/selfagency/opilot/compare/v1.7.2...v1.7.3
+
+_Source: changes from v1.7.2 to v1.7.3._
+
 ## [1.7.2] - 2026-06-02
 
 ## What's Changed
