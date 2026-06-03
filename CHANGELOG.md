@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.5] - 2026-06-03
+
+**Full Changelog**: https://github.com/selfagency/opilot/compare/v1.7.4...v1.7.5
+
+_Source: changes from v1.7.4 to v1.7.5._
+
 ## [1.7.4] - 2026-06-03
 
 **Full Changelog**: https://github.com/selfagency/opilot/compare/v1.7.3...v1.7.4
