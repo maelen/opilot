@@ -734,6 +734,8 @@ export class LocalModelsProvider implements TreeDataProvider<ModelTreeItem>, Dis
   /** Set or replace the Ollama client (used for deferred initialization after async setup). */
   setClient(client: Ollama): void {
     this.client = client;
+    // Immediately refresh tree with the now-available client
+    this.refresh();
   }
 
   /** Set the callback invoked when local models change (wired after eager registration). */
@@ -890,10 +892,6 @@ export class LocalModelsProvider implements TreeDataProvider<ModelTreeItem>, Dis
 
   private async getLocalModels(): Promise<ModelTreeItem[]> {
     try {
-      // If client is not yet initialized (during eager registration), show initializing state
-      if (!this.client) {
-        return [makeStatusItem('Initializing...')];
-      }
       this.logChannel?.debug('[client] loading local models via list() and ps()...');
       const [listResponse, psResponse] = await Promise.all([this.getClient().list(), this.getClient().ps()]);
 
@@ -1044,16 +1042,7 @@ export class LocalModelsProvider implements TreeDataProvider<ModelTreeItem>, Dis
       reportError(this.logChannel, 'Failed to load local models', error, {
         showToUser: false
       });
-      // Treat transient failures (server starting) as initialization state.
-      // Schedule a single retry so the panel self-refreshes once backend is ready.
-      setTimeout(() => {
-        try {
-          this.refresh();
-        } catch (e) {
-          // noop
-        }
-      }, 1500);
-      return [makeStatusItem('Initializing...')];
+      return [makeStatusItem('Failed to load local models')];
     }
   }
 
