@@ -8,7 +8,7 @@ export default defineConfig({
   format: ['cjs'],
   platform: 'node',
   external: ['vscode'],
-  noExternal: ['ollama', /^@agentsy\/core/],
+  noExternal: ['ollama', 'undici', /^@agentsy\/core/],
   sourcemap: !production,
   minify: production,
   clean: true,
