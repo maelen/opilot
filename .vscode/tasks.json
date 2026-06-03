@@ -4,8 +4,8 @@
     {
       "label": "compile",
       "type": "shell",
-      "command": "pnpm",
-      "args": ["run", "compile"],
+      "command": "task",
+      "args": ["compile"],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -18,8 +18,8 @@
     {
       "label": "watch",
       "type": "shell",
-      "command": "pnpm",
-      "args": ["run", "watch:build"],
+      "command": "task",
+      "args": ["watch"],
       "isBackground": true,
       "problemMatcher": {
         "owner": "tsup",
