@@ -252,7 +252,7 @@ jobs:
       - name: Publish pre-release to VS Code Marketplace
         id: publish_vsce_pre
         if: needs.detect-tag.outputs.is_prerelease == 'true'
-        run: pnpm dlx @vscode/vsce publish --pre-release --packagePath opilot.vsix -p ${{ secrets.VSCE_PAT }}
+        run: pnpm dlx @vscode/vsce publish --pre-release --allow-all-proposed-apis --packagePath opilot.vsix -p ${{ secrets.VSCE_PAT }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
@@ -338,7 +338,7 @@ jobs:
       - name: Publish to VS Code Marketplace
         id: publish_vsce
         if: needs.detect-tag.outputs.is_prerelease != 'true'
-        run: pnpm dlx @vscode/vsce publish --packagePath opilot.vsix -p ${{ secrets.VSCE_PAT }}
+        run: pnpm dlx @vscode/vsce publish --allow-all-proposed-apis --packagePath opilot.vsix -p ${{ secrets.VSCE_PAT }}
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
 
