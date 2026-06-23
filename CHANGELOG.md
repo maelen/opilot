@@ -7,16 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.8.0] - 2026-06-23
-
-## What's Changed
-
-- fix: comprehensive 5-issue remediation by @selfagency in https://github.com/selfagency/opilot/pull/129
-
-**Full Changelog**: https://github.com/selfagency/opilot/compare/v1.7.5...v1.8.0
-
-_Source: changes from v1.7.5 to v1.8.0._
-
 ## [1.7.5] - 2026-06-03
 
 **Full Changelog**: https://github.com/selfagency/opilot/compare/v1.7.4...v1.7.5
