@@ -15,7 +15,10 @@ export const SUPPORTED_SETTING_KEYS = [
   'enableInlineCompletions',
   'hideThinkingContent',
   'repetitionDetection',
-  'maxContextTokens'
+  'maxContextTokens',
+  'showConnectionFailurePopup',
+  'experimental.nativeThinkingPart',
+  'experimental.webSearch'
 ] as const;
 
 type SupportedSettingKey = (typeof SUPPORTED_SETTING_KEYS)[number];

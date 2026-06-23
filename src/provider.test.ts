@@ -253,7 +253,7 @@ describe('OllamaChatModelProvider utility flows', () => {
     );
 
     const count = await provider.provideTokenCount(
-      {} as unknown as LanguageModelChatInformation,
+      { id: 'ollama:smollm:135m' } as unknown as LanguageModelChatInformation,
       '12345678',
       {} as unknown as CancellationToken
     );
@@ -276,11 +276,46 @@ describe('OllamaChatModelProvider utility flows', () => {
     } as unknown as LanguageModelChatRequestMessage;
 
     const count = await provider.provideTokenCount(
-      {} as unknown as LanguageModelChatInformation,
+      { id: 'ollama:smollm:135m' } as unknown as LanguageModelChatInformation,
       message,
       {} as unknown as CancellationToken
     );
     expect(count).toBeGreaterThan(0);
+  });
+
+  it('returns 0 for empty text', async () => {
+    const provider = new OllamaChatModelProvider(
+      makeContext(),
+      { list: vi.fn(), show: vi.fn() } as unknown as Ollama,
+      makeLogger()
+    );
+
+    const count = await provider.provideTokenCount(
+      { id: 'ollama:smollm:135m' } as unknown as LanguageModelChatInformation,
+      '',
+      {} as unknown as CancellationToken
+    );
+    expect(count).toBe(0);
+  });
+
+  it('falls back to heuristic on fetch failure', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('network error'));
+
+    const provider = new OllamaChatModelProvider(
+      makeContext(),
+      { list: vi.fn(), show: vi.fn() } as unknown as Ollama,
+      makeLogger()
+    );
+
+    const count = await provider.provideTokenCount(
+      { id: 'ollama:smollm:135m' } as unknown as LanguageModelChatInformation,
+      '12345678',
+      {} as unknown as CancellationToken
+    );
+    expect(count).toBe(2);
+
+    globalThis.fetch = originalFetch;
   });
 });
 
@@ -1104,7 +1139,7 @@ describe('OllamaChatModelProvider chat response', () => {
     expect(userMsg?.content).toContain('how do i center a div in css');
   });
 
-  it('appends fallback prompt from options when messages only contain scaffolding', async () => {
+  it('passes scaffolding-only messages through without injecting options prompt', async () => {
     const chat = vi.fn().mockImplementation(async function* () {
       await Promise.resolve();
       yield { message: { content: 'ok' }, done: true };
@@ -1163,8 +1198,10 @@ describe('OllamaChatModelProvider chat response', () => {
     expect(chat).toHaveBeenCalled();
     const chatArgs = chat.mock.calls[0]?.[0];
     const userMessages = chatArgs?.messages?.filter((m: any) => m.role === 'user') ?? [];
-    const lastUser = userMessages.at(-1);
-    expect(lastUser?.content).toContain('how do i center a div in css');
+    // The fallback prompt from options has been removed — scaffolding-only messages
+    // are passed through without injecting the options prompt into the conversation.
+    expect(userMessages).toHaveLength(1);
+    expect(userMessages[0]?.content).not.toContain('how do i center a div in css');
   });
 
   it('handles tool calls in response', async () => {
@@ -2803,6 +2840,11 @@ describe('isThinkingModelId', () => {
   it('returns true for kimi models', () => {
     expect(isThinkingModelId('kimi-k2-thinking:cloud')).toBe(true);
     expect(isThinkingModelId('kimi-k2:latest')).toBe(true);
+  });
+
+  it('returns true for gpt-oss models', () => {
+    expect(isThinkingModelId('gpt-oss')).toBe(true);
+    expect(isThinkingModelId('gpt-oss:20b')).toBe(true);
   });
 
   it('returns true for models with "thinking" in the name', () => {

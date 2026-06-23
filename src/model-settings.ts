@@ -13,14 +13,26 @@ export interface ModelSettingsContext {
 }
 
 /**
+ * Thinking effort level.
+ * - `true` / `false`: standard boolean toggle (most models)
+ * - `'low' | 'medium' | 'high'`: effort level for GPT-OSS and similar models
+ * - `undefined`: model default
+ */
+export type ThinkValue = boolean | 'low' | 'medium' | 'high';
+
+/**
  * Per-model generation options that can be persisted per model ID.
  * All fields are optional; only set values override Ollama defaults.
  */
 export interface ModelOptions {
+  frequency_penalty?: number;
   num_ctx?: number;
   num_predict?: number;
+  presence_penalty?: number;
+  seed?: number;
+  stop?: string | string[];
   temperature?: number;
-  think?: boolean;
+  think?: ThinkValue;
   think_budget?: number;
   top_k?: number;
   top_p?: number;
@@ -59,11 +71,31 @@ function sanitizeModelOptions(value: unknown): ModelOptionOverrides {
   if (isFiniteNumber(candidate.num_predict)) {
     sanitized.num_predict = candidate.num_predict;
   }
-  if (typeof candidate.think === 'boolean') {
+  if (
+    typeof candidate.think === 'boolean' ||
+    candidate.think === 'low' ||
+    candidate.think === 'medium' ||
+    candidate.think === 'high'
+  ) {
     sanitized.think = candidate.think;
   }
   if (isFiniteNumber(candidate.think_budget)) {
     sanitized.think_budget = candidate.think_budget;
+  }
+  if (isFiniteNumber(candidate.seed)) {
+    sanitized.seed = candidate.seed;
+  }
+  if (
+    typeof candidate.stop === 'string' ||
+    (Array.isArray(candidate.stop) && candidate.stop.every(s => typeof s === 'string'))
+  ) {
+    sanitized.stop = candidate.stop;
+  }
+  if (isFiniteNumber(candidate.frequency_penalty)) {
+    sanitized.frequency_penalty = candidate.frequency_penalty;
+  }
+  if (isFiniteNumber(candidate.presence_penalty)) {
+    sanitized.presence_penalty = candidate.presence_penalty;
   }
 
   return sanitized;
