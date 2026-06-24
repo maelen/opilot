@@ -1233,7 +1233,9 @@ export async function activate(context: vscode.ExtensionContext) {
       provider.refreshModels();
       statusBarRegistration.triggerCheck();
     },
-    undefined,
+    () => {
+      provider.refreshModels();
+    },
     sidebarProviders
   );
 
