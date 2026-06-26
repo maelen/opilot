@@ -213,24 +213,26 @@ For more information on Ollama's security and privacy model, see the [Ollama Git
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) 20+
-- [pnpm](https://pnpm.io/) (version pinned in `package.json`)
+- [pnpm](https://pnpm.io/) — install once with `npm install -g pnpm`
 - [VS Code](https://code.visualstudio.com/) 1.111.0+
 
 ### Build
 
 ```bash
-pnpm install
-pnpm run compile        # type-check + lint + bundle
-pnpm run watch          # parallel watch for type-check and bundle
+pnpm install                  # install all dependencies
+pnpm exec task compile        # bundle the extension into dist/
+pnpm exec task watch          # recompile on every file change
+pnpm exec task package        # compile + package into opilot.vsix
 ```
 
 ### Testing
 
 ```bash
-pnpm test               # unit tests (Vitest)
-pnpm run test:coverage  # unit tests with coverage (target: 85%)
-pnpm run test:extension # VS Code integration tests
-pnpm run lint           # static analysis (oxlint)
+pnpm exec task unit-tests         # unit tests (Vitest)
+pnpm exec task unit-test-coverage # unit tests with coverage (target: 85%)
+pnpm exec task extension-tests    # VS Code integration tests
+pnpm exec task lint               # static analysis (Biome via Ultracite)
+pnpm exec task lint-fix           # auto-fix lint and formatting issues
 ```
 
 ### Debugging

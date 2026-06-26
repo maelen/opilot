@@ -42,6 +42,13 @@ tasks:
       - node node_modules/tsup/dist/cli-default.js
     silent: false
 
+  package:
+    desc: Package the extension into a VSIX file
+    deps: [compile]
+    cmds:
+      - node node_modules/@vscode/vsce/vsce package --no-dependencies --out opilot.vsix
+    silent: false
+
   unit-tests:
     desc: Run unit tests
     cmds:
