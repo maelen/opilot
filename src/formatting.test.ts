@@ -6,6 +6,8 @@ import {
   dedupeXmlContextBlocksByTag,
   formatXmlLikeResponseForDisplay,
   sanitizeNonStreamingModelOutput,
+  sanitizeToolRoundPayload,
+  sanitizeToolRoundText,
   sanitizeVisibleNonStreamingModelOutput,
   splitLeadingXmlContextBlocks,
   stripVisiblePromptControlTokens,
@@ -81,6 +83,31 @@ describe('createXmlStreamFilter', () => {
   });
 });
 
+describe('sanitizeToolRoundText', () => {
+  it('strips leaked thinking and prompt-control tags without XML formatting', () => {
+    const input = '<think>reason</think><|im_start|>assistant\nvisible<|im_end|><|endoftext|>';
+    expect(sanitizeToolRoundText(input)).toBe('reasonvisible');
+  });
+
+  it('strips Gemma thinking channel wrappers from tool-round text', () => {
+    const input = '<|channel>thought\ninternal<channel|>payload';
+    expect(sanitizeToolRoundText(input)).toBe('internalpayload');
+  });
+});
+
+describe('sanitizeToolRoundPayload', () => {
+  it('recursively sanitizes strings inside tool argument payloads', () => {
+    expect(
+      sanitizeToolRoundPayload({
+        query: '<think>draft</think>hello',
+        nested: ['<|im_start|>assistant\nA<|im_end|>', { note: '<|channel>thought\nB<channel|>' }]
+      })
+    ).toEqual({
+      query: 'drafthello',
+      nested: ['A', { note: 'B' }]
+    });
+  });
+});
 describe('stripXmlContextTags', () => {
   it('removes context tags from complete text', () => {
     const result = stripXmlContextTags('<environment_info>private</environment_info>public');

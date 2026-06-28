@@ -43,6 +43,8 @@ import {
   dedupeXmlContextBlocksByTag,
   isThinkingModelId as isThinkingModelIdFromProfile,
   MODEL_THINKING_TAG_MAP,
+  sanitizeToolRoundPayload,
+  sanitizeToolRoundText,
   sanitizeVisibleNonStreamingModelOutput,
   splitLeadingXmlContextBlocks
 } from './formatting.js';
@@ -1228,7 +1230,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
             id: this.getOllamaToolCallId(part.callId),
             function: {
               name: part.name,
-              arguments: part.input
+              arguments: sanitizeToolRoundPayload(part.input)
             }
           });
         } else if (part instanceof LanguageModelToolResultPart) {
@@ -1242,7 +1244,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
             .join('');
           ollamaMessages.push({
             role: 'tool',
-            content: toolContent,
+            content: sanitizeToolRoundText(toolContent),
             tool_call_id: this.getOllamaToolCallId(part.callId)
           } as never);
         } else {

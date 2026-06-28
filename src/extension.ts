@@ -25,6 +25,8 @@ import {
   dedupeXmlContextBlocksByTag,
   isThinkingModelId,
   MODEL_THINKING_TAG_MAP,
+  sanitizeToolRoundPayload,
+  sanitizeToolRoundText,
   sanitizeVisibleNonStreamingModelOutput,
   splitLeadingXmlContextBlocks
 } from './formatting.js';
@@ -516,7 +518,7 @@ export async function handleChatRequest(
           // Append the assistant message (with its tool_calls) to the conversation.
           ollamaMessages.push({
             role: 'assistant',
-            content: roundResponse.message.content ?? '',
+            content: sanitizeToolRoundText(roundResponse.message.content ?? ''),
             tool_calls: toolCalls
           });
 
@@ -532,7 +534,7 @@ export async function handleChatRequest(
                 await vscode.lm.invokeTool(
                   toolName,
                   {
-                    input: toolCall.function.arguments as Record<string, unknown>,
+                    input: sanitizeToolRoundPayload(toolCall.function.arguments) as Record<string, unknown>,
                     // biome-ignore lint/style/noNonNullAssertion: validated in enclosing if-block
                     toolInvocationToken: request.toolInvocationToken!
                   },
@@ -545,7 +547,7 @@ export async function handleChatRequest(
               }
               break;
             }
-            const toolInput = toolCall.function.arguments;
+            const toolInput = sanitizeToolRoundPayload(toolCall.function.arguments) as Record<string, unknown>;
             let resultText: string;
             try {
               const result = await vscode.lm.invokeTool(
@@ -566,7 +568,7 @@ export async function handleChatRequest(
             }
             ollamaMessages.push({
               role: 'tool',
-              content: resultText,
+              content: sanitizeToolRoundText(resultText),
               tool_name: toolName,
               tool_call_id: (toolCall as { id?: string }).id
             });
@@ -630,7 +632,7 @@ export async function handleChatRequest(
               correctedOnce = true;
               xmlConversation.push({
                 role: 'assistant',
-                content: responseText
+                content: sanitizeToolRoundText(responseText)
               });
               xmlConversation.push({
                 role: 'user',
@@ -646,7 +648,7 @@ export async function handleChatRequest(
             return;
           }
 
-          xmlConversation.push({ role: 'assistant', content: responseText });
+          xmlConversation.push({ role: 'assistant', content: sanitizeToolRoundText(responseText) });
           // The XML system prompt instructs models to call ONE tool per response.
           // If a model emits multiple tool tags, execute only the first to honour
           // that contract and avoid confusing follow-up context.
@@ -661,7 +663,7 @@ export async function handleChatRequest(
             const result = await vscode.lm.invokeTool(
               xmlToolCall.name,
               {
-                input: xmlToolCall.parameters,
+                input: sanitizeToolRoundPayload(xmlToolCall.parameters) as Record<string, unknown>,
                 // biome-ignore lint/style/noNonNullAssertion: validated in enclosing if-block
                 toolInvocationToken: request.toolInvocationToken!
               },
@@ -678,7 +680,7 @@ export async function handleChatRequest(
           // JSON function calling have no training data for the 'tool' role either.
           xmlConversation.push({
             role: 'user',
-            content: `[Tool result: ${xmlToolCall.name}]\n${resultText}`
+            content: `[Tool result: ${xmlToolCall.name}]\n${sanitizeToolRoundText(resultText)}`
           });
 
           correctedOnce = false;
@@ -808,7 +810,7 @@ export async function handleChatRequest(
         if (chunk.message?.tool_calls?.length) {
           for (const toolCall of chunk.message.tool_calls) {
             stream.markdown(
-              `\n\`\`\`json\n${JSON.stringify({ tool: toolCall.function.name, arguments: toolCall.function.arguments }, null, 2)}\n\`\`\`\n`
+              `\n\`\`\`json\n${JSON.stringify({ tool: toolCall.function.name, arguments: sanitizeToolRoundPayload(toolCall.function.arguments) }, null, 2)}\n\`\`\`\n`
             );
             renderState.emittedOutput = true;
           }

@@ -153,6 +153,50 @@ export function stripVisiblePromptControlTokens(text: string): string {
   return output;
 }
 
+function stripKnownThinkingTags(text: string): string {
+  let output = text;
+  const uniqueThinkingTags = new Set<string>();
+
+  for (const profile of MODEL_TEXT_PROFILES) {
+    if (profile.thinkingTags) {
+      uniqueThinkingTags.add(profile.thinkingTags[0]);
+      uniqueThinkingTags.add(profile.thinkingTags[1]);
+    }
+  }
+
+  for (const token of uniqueThinkingTags) {
+    output = output.replaceAll(token, '');
+  }
+
+  return output;
+}
+
+/**
+ * Strip known model-authored reasoning/control artifacts from tool-round text
+ * without applying broader XML-to-markdown formatting.
+ */
+export function sanitizeToolRoundText(text: string): string {
+  return stripKnownThinkingTags(stripVisiblePromptControlTokens(text));
+}
+
+export function sanitizeToolRoundPayload(value: unknown): unknown {
+  if (typeof value === 'string') {
+    return sanitizeToolRoundText(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(item => sanitizeToolRoundPayload(item));
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nestedValue]) => [key, sanitizeToolRoundPayload(nestedValue)])
+    );
+  }
+
+  return value;
+}
+
 export interface PromptControlStreamFilter {
   end: () => string;
   write: (chunk: string) => string;

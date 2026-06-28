@@ -1711,6 +1711,224 @@ describe('handleChatRequest direct Ollama path (thinking + tools)', () => {
     expect(allCalls.some((v: string) => v.includes('get_weather'))).toBe(true);
   });
 
+  it('sanitizes leaked think/control tags in tool call preview arguments', async () => {
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
+    vi.doMock('./diagnostics.js', () => ({
+      createDiagnosticsLogger: () => ({
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        exception: vi.fn()
+      }),
+      getConfiguredLogLevel: vi.fn(() => 'info')
+    }));
+    vi.doMock('./provider.js', () => ({
+      OllamaChatModelProvider: class {
+        setAuthToken = vi.fn();
+        prefetchModels = vi.fn();
+      },
+      isThinkingModelId: () => false
+    }));
+    vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn(), registerSidebarProviders: vi.fn() }));
+    vi.doMock('./modelfiles.js', () => ({
+      registerModelfilesProvider: vi.fn(() => ({ refresh: vi.fn() })),
+      registerModelfileCommands: vi.fn()
+    }));
+    vi.doMock('vscode', () => ({
+      LanguageModelTextPart: class {
+        constructor(public value: string) {}
+      },
+      LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
+      ChatRequestTurn: class {
+        prompt = '';
+        reply = '';
+      },
+      ChatResponseTurn: class {
+        response: unknown[] = [];
+      },
+      ChatResponseMarkdownPart: class {},
+      LanguageModelChatMessage: {
+        User: (content: string) => ({ role: 1, content }),
+        Assistant: (content: string) => ({ role: 2, content })
+      },
+      lm: { selectChatModels: vi.fn().mockResolvedValue([]) },
+      workspace: {
+        getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+      },
+      Uri: {
+        file: vi.fn((path: string) => ({ fsPath: path })),
+        joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
+      },
+      chat: {
+        createChatParticipant: vi.fn(() => ({
+          iconPath: undefined,
+          dispose: vi.fn()
+        }))
+      },
+      commands: {
+        registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+        executeCommand: vi.fn()
+      }
+    }));
+
+    const ext = await import('./extension.js');
+
+    const mockMarkdown = vi.fn();
+    const stream = { markdown: mockMarkdown };
+    const token = { isCancellationRequested: false };
+
+    const mockClient = {
+      chat: vi.fn().mockResolvedValue(
+        (async function* () {
+          await Promise.resolve();
+          yield {
+            message: {
+              tool_calls: [
+                {
+                  function: {
+                    name: 'search',
+                    arguments: { query: '<think>draft</think><|im_start|>assistant\nhello<|im_end|>' }
+                  }
+                }
+              ]
+            }
+          };
+          yield { message: { content: 'done' }, done: true };
+        })()
+      )
+    };
+
+    await ext.handleChatRequest(
+      { prompt: 'search', model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' } } as any,
+      { history: [] } as any,
+      stream as any,
+      token as any,
+      mockClient as any
+    );
+
+    const joined = mockMarkdown.mock.calls.map((c: any[]) => c[0] as string).join('');
+    expect(joined).toContain('drafthello');
+    expect(joined).not.toContain('<think>');
+    expect(joined).not.toContain('<|im_start|>');
+  });
+
+  it('sanitizes model-authored tool-round content before the next tool loop request', async () => {
+    vi.doMock('./client.js', () => ({
+      getOllamaClient: vi.fn(),
+      testConnection: vi.fn()
+    }));
+    vi.doMock('./diagnostics.js', () => ({
+      createDiagnosticsLogger: () => ({
+        info: vi.fn(),
+        warn: vi.fn(),
+        error: vi.fn(),
+        debug: vi.fn(),
+        exception: vi.fn()
+      }),
+      getConfiguredLogLevel: vi.fn(() => 'info')
+    }));
+    vi.doMock('./provider.js', () => ({
+      OllamaChatModelProvider: class {
+        setAuthToken = vi.fn();
+        prefetchModels = vi.fn();
+      },
+      isThinkingModelId: () => false
+    }));
+    vi.doMock('./sidebar.js', () => ({ registerSidebar: vi.fn(), registerSidebarProviders: vi.fn() }));
+    vi.doMock('./modelfiles.js', () => ({
+      registerModelfilesProvider: vi.fn(() => ({ refresh: vi.fn() })),
+      registerModelfileCommands: vi.fn()
+    }));
+
+    const invokeTool = vi.fn().mockResolvedValue({
+      content: [
+        {
+          constructor: { name: 'LanguageModelTextPart' },
+          value: 'tool result'
+        }
+      ]
+    });
+
+    vi.doMock('vscode', () => {
+      class LanguageModelTextPart {
+        constructor(public value: string) {}
+      }
+
+      return {
+        LanguageModelTextPart,
+        LanguageModelChatMessageRole: { User: 1, Assistant: 2 },
+        ChatRequestTurn: class {
+          prompt = '';
+          reply = '';
+        },
+        ChatResponseTurn: class {
+          response: unknown[] = [];
+        },
+        ChatResponseMarkdownPart: class {},
+        LanguageModelChatMessage: {
+          User: (content: string) => ({ role: 1, content }),
+          Assistant: (content: string) => ({ role: 2, content })
+        },
+        lm: {
+          selectChatModels: vi.fn().mockResolvedValue([]),
+          invokeTool,
+          tools: [{ name: 'search', description: 'test', inputSchema: {} }]
+        },
+        workspace: {
+          getConfiguration: vi.fn().mockReturnValue({ get: vi.fn() })
+        },
+        Uri: {
+          file: vi.fn((path: string) => ({ fsPath: path })),
+          joinPath: vi.fn((_base: any, p: string) => ({ fsPath: p }))
+        },
+        chat: {
+          createChatParticipant: vi.fn(() => ({
+            iconPath: undefined,
+            dispose: vi.fn()
+          }))
+        },
+        commands: {
+          registerCommand: vi.fn(() => ({ dispose: vi.fn() })),
+          executeCommand: vi.fn()
+        }
+      };
+    });
+
+    const ext = await import('./extension.js');
+
+    const chat = vi
+      .fn()
+      .mockResolvedValueOnce({
+        message: {
+          content: '<think>reason</think><|im_start|>assistant\nuse tool<|im_end|>',
+          tool_calls: [{ function: { name: 'search', arguments: { query: 'hello' } } }]
+        }
+      })
+      .mockResolvedValueOnce({
+        message: { content: 'final answer' }
+      });
+
+    await ext.handleChatRequest(
+      {
+        prompt: 'search',
+        model: { vendor: 'selfagency-opilot', id: 'llama3.2:latest' },
+        toolInvocationToken: 'tok-1'
+      } as any,
+      { history: [] } as any,
+      { markdown: vi.fn() } as any,
+      { isCancellationRequested: false } as any,
+      { chat } as any
+    );
+
+    const secondCallMessages = chat.mock.calls[1][0].messages as Array<{ role: string; content: string }>;
+    const assistantToolTurn = secondCallMessages.find(message => message.role === 'assistant' && message.content);
+    expect(assistantToolTurn?.content).toBe('reasonuse tool');
+  });
+
   it('shows error dialog and attempts model unload when model runner crashes', async () => {
     vi.doMock('./client.js', () => ({
       getOllamaClient: vi.fn(),
