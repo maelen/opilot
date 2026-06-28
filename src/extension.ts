@@ -44,7 +44,8 @@ import {
   appendVisibleResponseChunk,
   beginContentSection,
   beginThinkingSection,
-  createStreamRenderState
+  createStreamRenderState,
+  resolveRepetitionSensitivity
 } from './stream-render.js';
 import { ThinkingParser } from './thinking-parser.js';
 import {
@@ -740,11 +741,7 @@ export async function handleChatRequest(
       }
 
       const renderState = createStreamRenderState();
-      const rawRepSensitivity = getSetting<string>('repetitionDetection', 'conservative');
-      const repSensitivity: 'off' | 'conservative' | 'moderate' =
-        rawRepSensitivity === 'off' || rawRepSensitivity === 'conservative' || rawRepSensitivity === 'moderate'
-          ? rawRepSensitivity
-          : 'conservative';
+      const repSensitivity = resolveRepetitionSensitivity(getSetting<string>('repetitionDetection', 'conservative'));
       const xmlFilter = createXmlStreamFilter({
         onWarning: (msg, ctx) => {
           const ctxSuffix = ctx ? ` ${JSON.stringify(ctx)}` : '';

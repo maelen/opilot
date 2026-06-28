@@ -1,5 +1,7 @@
 import { detectsRepetition } from './context-utils.js';
 
+export type RepetitionSensitivity = 'off' | 'conservative' | 'moderate';
+
 export interface StreamRenderState {
   contentStarted: boolean;
   emittedOutput: boolean;
@@ -45,7 +47,7 @@ export function beginContentSection(state: StreamRenderState): boolean {
 export function appendVisibleResponseChunk(
   state: StreamRenderState,
   chunk: string,
-  repSensitivity: 'off' | 'conservative' | 'moderate'
+  repSensitivity: RepetitionSensitivity
 ): boolean {
   if (!chunk) {
     return false;
@@ -54,4 +56,8 @@ export function appendVisibleResponseChunk(
   state.emittedOutput = true;
   state.responseBuffer = (state.responseBuffer + chunk).slice(-600);
   return detectsRepetition(state.responseBuffer, repSensitivity);
+}
+
+export function resolveRepetitionSensitivity(value: string): RepetitionSensitivity {
+  return value === 'off' || value === 'moderate' || value === 'conservative' ? value : 'conservative';
 }

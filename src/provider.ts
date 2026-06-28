@@ -58,7 +58,8 @@ import {
   beginContentSection,
   beginThinkingSection,
   createStreamRenderState,
-  markThinkingLineContinued
+  markThinkingLineContinued,
+  resolveRepetitionSensitivity
 } from './stream-render.js';
 import { isToolsNotSupportedError, normalizeToolParameters } from './tool-utils.js';
 
@@ -792,7 +793,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
       }
 
       const renderState = createStreamRenderState();
-      const repSensitivity = getSetting<'off' | 'conservative' | 'moderate'>('repetitionDetection', 'conservative');
+      const repSensitivity = resolveRepetitionSensitivity(getSetting<string>('repetitionDetection', 'conservative'));
       const processor = new LLMStreamProcessor({
         parseThinkTags: shouldThink,
         scrubContextTags: true,
@@ -924,12 +925,13 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
       // Flush any remaining buffered content from the processor
       const final: ProcessedOutput = processor.flush();
       if (final.content) {
+        const finalVisibleContent = stripVisiblePromptControlTokens(final.content);
         if (beginContentSection(renderState)) {
           progress.report(new LanguageModelTextPart('\n\n\n\n'));
           renderState.emittedOutput = true;
         }
-        progress.report(new LanguageModelTextPart(final.content));
-        appendVisibleResponseChunk(renderState, final.content, repSensitivity);
+        progress.report(new LanguageModelTextPart(finalVisibleContent));
+        appendVisibleResponseChunk(renderState, finalVisibleContent, repSensitivity);
       }
 
       // Some model/server combinations can return a successful stream that emits

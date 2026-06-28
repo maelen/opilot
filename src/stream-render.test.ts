@@ -5,7 +5,8 @@ import {
   beginContentSection,
   beginThinkingSection,
   createStreamRenderState,
-  markThinkingLineContinued
+  markThinkingLineContinued,
+  resolveRepetitionSensitivity
 } from './stream-render.js';
 
 describe('stream render state helpers', () => {
@@ -45,5 +46,12 @@ describe('stream render state helpers', () => {
     expect(appendVisibleResponseChunk(state, chunk, 'off')).toBe(false);
     expect(state.emittedOutput).toBe(true);
     expect(state.responseBuffer).toHaveLength(600);
+  });
+
+  it('normalizes repetition sensitivity to known values', () => {
+    expect(resolveRepetitionSensitivity('off')).toBe('off');
+    expect(resolveRepetitionSensitivity('moderate')).toBe('moderate');
+    expect(resolveRepetitionSensitivity('conservative')).toBe('conservative');
+    expect(resolveRepetitionSensitivity('aggressive')).toBe('conservative');
   });
 });
