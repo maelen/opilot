@@ -34,16 +34,17 @@ import {
   getOllamaHost
 } from './client';
 import { compressToContext } from './compression.js';
-import { BASE_SYSTEM_PROMPT, detectsRepetition, resolveContextLimit } from './context-utils.js';
+import { BASE_SYSTEM_PROMPT, resolveContextLimit } from './context-utils.js';
 import type { DiagnosticsLogger } from './diagnostics.js';
 import { reportError } from './error-handler.js';
 import {
   appendToBlockquote,
   dedupeXmlContextBlocksByTag,
-  GEMMA4_THINKING_TAG_MAP,
-  sanitizeNonStreamingModelOutput,
+  isThinkingModelId as isThinkingModelIdFromProfile,
+  MODEL_THINKING_TAG_MAP,
+  sanitizeVisibleNonStreamingModelOutput,
   splitLeadingXmlContextBlocks,
-  stripKnownPromptControlTokens
+  stripVisiblePromptControlTokens
 } from './formatting.js';
 import {
   getModelOptionsForModel,
@@ -52,6 +53,13 @@ import {
   type ThinkValue
 } from './model-settings.js';
 import { getSetting } from './settings.js';
+import {
+  appendVisibleResponseChunk,
+  beginContentSection,
+  beginThinkingSection,
+  createStreamRenderState,
+  markThinkingLineContinued
+} from './stream-render.js';
 import { isToolsNotSupportedError, normalizeToolParameters } from './tool-utils.js';
 
 const MODEL_LIST_REFRESH_MIN_INTERVAL_MS = 5000;
@@ -783,18 +791,14 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
         }
       }
 
-      let thinkingStarted = false;
-      let thinkingLineStart = true;
-      let contentStarted = false;
-      let emittedOutput = false;
-      let responseBuffer = '';
+      const renderState = createStreamRenderState();
       const repSensitivity = getSetting<'off' | 'conservative' | 'moderate'>('repetitionDetection', 'conservative');
       const processor = new LLMStreamProcessor({
         parseThinkTags: shouldThink,
         scrubContextTags: true,
         accumulateNativeToolCalls: true,
         modelId: runtimeModelId,
-        thinkingTagMap: GEMMA4_THINKING_TAG_MAP,
+        thinkingTagMap: MODEL_THINKING_TAG_MAP,
         onWarning: (msg, ctx) => {
           const ctxSuffix = ctx ? ` ${JSON.stringify(ctx)}` : '';
           this.outputChannel.warn(`[client] processor: ${msg}${ctxSuffix}`);
@@ -817,31 +821,28 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
             typeof errorField === 'object' && errorField !== null ? JSON.stringify(errorField) : String(errorField);
           this.outputChannel.error(`[client] stream error: ${errorText}`);
           progress.report(new LanguageModelTextPart(`\n\n*Error: ${errorText}*`));
-          emittedOutput ||= true;
+          renderState.emittedOutput = true;
           break;
         }
 
         // Handle thinking tokens (reasoning phase) — Ollama server pre-splits these
         if (chunk.message?.thinking) {
           const thinkingPartValue = chunk.message.thinking;
-          if (!(thinkingStarted || useNativeThinkingPart)) {
+          if (!(renderState.thinkingStarted || useNativeThinkingPart)) {
             progress.report(new LanguageModelTextPart('\n\n> 💭 **Thinking**\n>\n'));
-            thinkingStarted = true;
-            thinkingLineStart = true;
-            emittedOutput ||= true;
-          } else if (!thinkingStarted) {
-            thinkingStarted = true;
-            emittedOutput ||= true;
+            beginThinkingSection(renderState);
+          } else if (!renderState.thinkingStarted) {
+            beginThinkingSection(renderState);
           }
           if (!(hideThinkingContent || useNativeThinkingPart)) {
-            const formatted = appendToBlockquote(thinkingPartValue, thinkingLineStart);
-            thinkingLineStart = false;
+            const formatted = appendToBlockquote(thinkingPartValue, renderState.thinkingLineStart);
+            markThinkingLineContinued(renderState);
             progress.report(new LanguageModelTextPart(formatted));
-            emittedOutput ||= true;
+            renderState.emittedOutput = true;
           } else if (useNativeThinkingPart) {
             // biome-ignore lint/suspicious/noExplicitAny: experimental proposed API
             progress.report(new (vscode as any).LanguageModelThinkingPart(thinkingPartValue));
-            emittedOutput ||= true;
+            renderState.emittedOutput = true;
           }
         }
 
@@ -854,49 +855,41 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
 
             // Handle thinking extracted from <think> tags in content
             if (output.thinking && !useNativeThinkingPart) {
-              if (!thinkingStarted) {
+              if (!renderState.thinkingStarted) {
                 progress.report(new LanguageModelTextPart('\n\n> 💭 **Thinking**\n>\n'));
-                thinkingStarted = true;
-                thinkingLineStart = true;
-                emittedOutput ||= true;
+                beginThinkingSection(renderState);
               }
               if (!hideThinkingContent) {
                 // When thinkingLineStart is false the thinking content from the
                 // processor may not begin with a blockquote marker, so prefix with
                 // `> ` to keep it inside the blockquote block.
-                const formatted = appendToBlockquote(output.thinking, thinkingLineStart);
-                thinkingLineStart = false;
+                const formatted = appendToBlockquote(output.thinking, renderState.thinkingLineStart);
+                markThinkingLineContinued(renderState);
                 progress.report(new LanguageModelTextPart(formatted));
-                emittedOutput ||= true;
+                renderState.emittedOutput = true;
               }
             } else if (output.thinking && useNativeThinkingPart) {
-              if (!thinkingStarted) {
-                thinkingStarted = true;
-                emittedOutput ||= true;
+              if (!renderState.thinkingStarted) {
+                beginThinkingSection(renderState);
               }
               // biome-ignore lint/suspicious/noExplicitAny: experimental proposed API
               progress.report(new (vscode as any).LanguageModelThinkingPart(output.thinking));
-              emittedOutput ||= true;
+              renderState.emittedOutput = true;
             }
 
             // Handle content (already XML-scrubbed by LLMStreamProcessor)
             if (output.content) {
-              const visibleContent = stripKnownPromptControlTokens(output.content);
+              const visibleContent = stripVisiblePromptControlTokens(output.content);
               // When using the native thinking part, VS Code handles the visual
               // separation between thinking and response; no manual separator needed.
-              if (visibleContent && thinkingStarted && !contentStarted) {
-                if (!useNativeThinkingPart) {
-                  progress.report(new LanguageModelTextPart('\n\n\n\n'));
-                  emittedOutput ||= true;
-                }
-                contentStarted = true;
+              if (visibleContent && beginContentSection(renderState) && !useNativeThinkingPart) {
+                progress.report(new LanguageModelTextPart('\n\n\n\n'));
+                renderState.emittedOutput = true;
               }
               if (visibleContent) {
                 this.outputChannel.debug(`[client] streaming chunk: ${visibleContent.slice(0, 50)}`);
                 progress.report(new LanguageModelTextPart(visibleContent));
-                emittedOutput ||= true;
-                responseBuffer = (responseBuffer + visibleContent).slice(-600);
-                if (detectsRepetition(responseBuffer, repSensitivity)) {
+                if (appendVisibleResponseChunk(renderState, visibleContent, repSensitivity)) {
                   this.outputChannel.warn(`[client] repetition detected for ${runtimeModelId}; stopping stream`);
                   progress.report(new LanguageModelTextPart('\n\n*[Stopped: repetition detected]*'));
                   break;
@@ -911,7 +904,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
                 const upstreamId = call.id || vsCodeId;
                 this.mapToolCallId(vsCodeId, upstreamId);
                 progress.report(new LanguageModelToolCallPart(vsCodeId, call.name, call.parameters));
-                emittedOutput ||= true;
+                renderState.emittedOutput = true;
               }
             }
 
@@ -931,19 +924,19 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
       // Flush any remaining buffered content from the processor
       const final: ProcessedOutput = processor.flush();
       if (final.content) {
-        if (thinkingStarted && !contentStarted) {
+        if (beginContentSection(renderState)) {
           progress.report(new LanguageModelTextPart('\n\n\n\n'));
-          emittedOutput ||= true;
+          renderState.emittedOutput = true;
         }
         progress.report(new LanguageModelTextPart(final.content));
-        emittedOutput ||= true;
+        appendVisibleResponseChunk(renderState, final.content, repSensitivity);
       }
 
       // Some model/server combinations can return a successful stream that emits
       // no visible content or tool calls, which causes VS Code to show
       // "Sorry, no response was returned." Recover by retrying once without
       // streaming and emit any returned content.
-      if (!(emittedOutput || token.isCancellationRequested)) {
+      if (!(renderState.emittedOutput || token.isCancellationRequested)) {
         this.outputChannel.warn(`[client] stream returned no output for ${runtimeModelId}; retrying with stream=false`);
 
         const fallbackFn = isCloudModel
@@ -986,16 +979,16 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
         if (fallback.message?.thinking && !hideThinkingContent) {
           const formatted = appendToBlockquote(fallback.message.thinking, true);
           progress.report(new LanguageModelTextPart(`\n\n> 💭 **Thinking**\n>\n${formatted}\n\n`));
-          emittedOutput = true;
+          renderState.emittedOutput = true;
         }
 
         if (fallback.message?.content) {
           // Non-stream fallback is complete text; safe to format XML-like blocks.
-          progress.report(new LanguageModelTextPart(sanitizeNonStreamingModelOutput(fallback.message.content)));
-          emittedOutput = true;
+          progress.report(new LanguageModelTextPart(sanitizeVisibleNonStreamingModelOutput(fallback.message.content)));
+          renderState.emittedOutput = true;
         }
 
-        if (!emittedOutput) {
+        if (!renderState.emittedOutput) {
           this.outputChannel.warn(
             `[client] fallback non-stream response also returned no content for model ${runtimeModelId}`
           );
@@ -1070,7 +1063,9 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
 
               if (rescued.message?.content) {
                 // Non-stream rescue is complete text; safe to format XML-like blocks.
-                progress.report(new LanguageModelTextPart(sanitizeNonStreamingModelOutput(rescued.message.content)));
+                progress.report(
+                  new LanguageModelTextPart(sanitizeVisibleNonStreamingModelOutput(rescued.message.content))
+                );
               }
 
               if (rescued.message?.tool_calls && Array.isArray(rescued.message.tool_calls)) {
@@ -1618,10 +1613,8 @@ function extractTextFromTokenCountInput(text: string | LanguageModelChatRequestM
     .join('');
 }
 
-const THINKING_MODEL_PATTERN = /qwen3|qwq|deepseek-?r1|phi[0-9]+-reasoning|kimi|gpt-oss|thinking|gemma4/i;
-
 export function isThinkingModelId(modelId: string): boolean {
-  return THINKING_MODEL_PATTERN.test(modelId);
+  return isThinkingModelIdFromProfile(modelId);
 }
 
 /**

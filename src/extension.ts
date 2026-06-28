@@ -9,7 +9,7 @@ import { nativeSdkChatOnce, nativeSdkStreamChat, openAiCompatChatOnce, openAiCom
 import { getCloudOllamaClient, getOllamaAuthToken, getOllamaClient, getOllamaHost, testConnection } from './client.js';
 import { OllamaInlineCompletionProvider } from './completions.js';
 import { compressToContext } from './compression.js';
-import { BASE_SYSTEM_PROMPT, detectsRepetition, resolveContextLimit } from './context-utils.js';
+import { BASE_SYSTEM_PROMPT, resolveContextLimit } from './context-utils.js';
 import { createDiagnosticsLogger, type DiagnosticsLogger, getConfiguredLogLevel } from './diagnostics.js';
 import { reportError } from './error-handler.js';
 import {
@@ -22,10 +22,11 @@ import { formatBytes } from './format-utils.js';
 import {
   createXmlStreamFilter,
   dedupeXmlContextBlocksByTag,
-  GEMMA4_THINKING_TAG_MAP,
-  sanitizeNonStreamingModelOutput,
+  isThinkingModelId,
+  MODEL_THINKING_TAG_MAP,
+  sanitizeVisibleNonStreamingModelOutput,
   splitLeadingXmlContextBlocks,
-  stripKnownPromptControlTokens
+  stripVisiblePromptControlTokens
 } from './formatting.js';
 import {
   getModelOptionsForModel,
@@ -34,11 +35,17 @@ import {
   saveModelSettings
 } from './model-settings.js';
 import { registerModelfileCommands, registerModelfilesProvider } from './modelfiles.js';
-import { isThinkingModelId, OllamaChatModelProvider } from './provider.js';
+import { OllamaChatModelProvider } from './provider.js';
 import { affectsSetting, getSetting, migrateLegacySettings, SETTINGS_NAMESPACE } from './settings.js';
 import { createModelSettingsViewProvider, MODEL_SETTINGS_VIEW_ID } from './settings-webview.js';
 import { registerSidebar, registerSidebarProviders, type SidebarProfilingSnapshot } from './sidebar.js';
 import { registerStatusBarHeartbeat } from './status-bar.js';
+import {
+  appendVisibleResponseChunk,
+  beginContentSection,
+  beginThinkingSection,
+  createStreamRenderState
+} from './stream-render.js';
 import { ThinkingParser } from './thinking-parser.js';
 import {
   buildXmlToolSystemPrompt,
@@ -500,7 +507,7 @@ export async function handleChatRequest(
           if (!toolCalls?.length) {
             // No tool invocations needed — render the response text and exit.
             if (roundResponse.message.content) {
-              stream.markdown(sanitizeNonStreamingModelOutput(roundResponse.message.content));
+              stream.markdown(sanitizeVisibleNonStreamingModelOutput(roundResponse.message.content));
             }
             return;
           }
@@ -567,7 +574,7 @@ export async function handleChatRequest(
           // task_complete signals the agent is done — display any final content and exit.
           if (calledTaskComplete) {
             if (roundResponse.message.content) {
-              stream.markdown(sanitizeNonStreamingModelOutput(roundResponse.message.content));
+              stream.markdown(sanitizeVisibleNonStreamingModelOutput(roundResponse.message.content));
             }
             return;
           }
@@ -633,7 +640,7 @@ export async function handleChatRequest(
               continue;
             }
             if (responseText.trim()) {
-              stream.markdown(sanitizeNonStreamingModelOutput(responseText));
+              stream.markdown(sanitizeVisibleNonStreamingModelOutput(responseText));
             }
             return;
           }
@@ -732,10 +739,7 @@ export async function handleChatRequest(
         }
       }
 
-      let thinkingStarted = false;
-      let contentStarted = false;
-      let emittedContent = false;
-      let responseBuffer = '';
+      const renderState = createStreamRenderState();
       const rawRepSensitivity = getSetting<string>('repetitionDetection', 'conservative');
       const repSensitivity: 'off' | 'conservative' | 'moderate' =
         rawRepSensitivity === 'off' || rawRepSensitivity === 'conservative' || rawRepSensitivity === 'moderate'
@@ -752,7 +756,7 @@ export async function handleChatRequest(
       // some model/version combinations still emit raw <think> tags in message.content.
       // Applying the parser unconditionally is safe: if content is already clean the
       // parser transitions through lookingForOpening → thinkingDone and passes it unchanged.
-      const thinkingParser = shouldThink ? ThinkingParser.forModel(modelId, GEMMA4_THINKING_TAG_MAP) : null;
+      const thinkingParser = shouldThink ? ThinkingParser.forModel(modelId, MODEL_THINKING_TAG_MAP) : null;
 
       for await (const chunk of response) {
         if (token.isCancellationRequested) {
@@ -760,10 +764,8 @@ export async function handleChatRequest(
         }
 
         if (chunk.message?.thinking) {
-          if (!thinkingStarted) {
+          if (beginThinkingSection(renderState)) {
             stream.markdown('\n\n*Thinking*\n\n');
-            thinkingStarted = true;
-            emittedContent = true;
           }
           if (!hideThinkingContent) {
             stream.markdown(chunk.message.thinking);
@@ -779,10 +781,8 @@ export async function handleChatRequest(
           }
 
           if (thinkingChunk) {
-            if (!thinkingStarted) {
+            if (beginThinkingSection(renderState)) {
               stream.markdown('\n\n*Thinking*\n\n');
-              thinkingStarted = true;
-              emittedContent = true;
             }
             if (!hideThinkingContent) {
               stream.markdown(thinkingChunk);
@@ -790,19 +790,15 @@ export async function handleChatRequest(
           }
 
           if (contentChunk) {
-            if (thinkingStarted && !contentStarted) {
+            if (beginContentSection(renderState)) {
               stream.markdown('\n\n---\n\n*Response*\n\n');
-              contentStarted = true;
             }
             outputChannel?.debug(`[client] @ollama chunk: ${contentChunk.slice(0, 50)}`);
             // Filter context tags using SAX parser - handles incomplete tags across chunk boundaries
-            const cleanContent = stripKnownPromptControlTokens(xmlFilter.write(contentChunk));
+            const cleanContent = stripVisiblePromptControlTokens(xmlFilter.write(contentChunk));
             if (cleanContent) {
               stream.markdown(cleanContent);
-              emittedContent = true;
-              // Append to rolling buffer (bounded to 600 chars) for repetition detection.
-              responseBuffer = (responseBuffer + cleanContent).slice(-600);
-              if (detectsRepetition(responseBuffer, repSensitivity)) {
+              if (appendVisibleResponseChunk(renderState, cleanContent, repSensitivity)) {
                 outputChannel?.warn('[client] repetition detected in @ollama response; stopping stream');
                 stream.markdown('\n\n*\\[Stopped: repetition detected\\]*');
                 break;
@@ -816,7 +812,7 @@ export async function handleChatRequest(
             stream.markdown(
               `\n\`\`\`json\n${JSON.stringify({ tool: toolCall.function.name, arguments: toolCall.function.arguments }, null, 2)}\n\`\`\`\n`
             );
-            emittedContent = true;
+            renderState.emittedOutput = true;
           }
         }
 
@@ -826,15 +822,15 @@ export async function handleChatRequest(
       }
 
       // Finalize XML filter to flush any remaining buffer
-      const finalContent = stripKnownPromptControlTokens(xmlFilter.end());
+      const finalContent = stripVisiblePromptControlTokens(xmlFilter.end());
       if (finalContent) {
         stream.markdown(finalContent);
-        emittedContent = true;
+        appendVisibleResponseChunk(renderState, finalContent, repSensitivity);
       }
 
       // Some model/server combinations return a successful stream that emits
       // no visible content or tool calls. Recover by retrying once without streaming.
-      if (!(emittedContent || token.isCancellationRequested)) {
+      if (!(renderState.emittedOutput || token.isCancellationRequested)) {
         outputChannel?.warn(`[client] @ollama stream returned no output for ${modelId}; retrying with stream=false`);
         const fallback = await (isCloudModel
           ? openAiCompatChatOnce({
@@ -856,7 +852,7 @@ export async function handleChatRequest(
               modelOptions
             }));
         if (fallback.message?.content) {
-          stream.markdown(sanitizeNonStreamingModelOutput(fallback.message.content));
+          stream.markdown(sanitizeVisibleNonStreamingModelOutput(fallback.message.content));
         } else {
           stream.markdown('*No response from model. Try rephrasing or switching to a different model.*');
         }

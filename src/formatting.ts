@@ -4,6 +4,7 @@
  */
 
 import { splitLeadingXmlContextBlocks as _split } from '@agentsy/core/context';
+import { sanitizeNonStreamingModelOutput as _sanitizeNonStreamingModelOutput } from '@agentsy/core/formatting';
 
 export {
   dedupeXmlContextBlocksByTag,
@@ -45,56 +46,117 @@ export function splitLeadingXmlContextBlocks(text: string): SplitLeadingXmlConte
 }
 
 /**
- * Gemma 4 thinking tag map for use with `ThinkingParser.forModel()` and
- * `LLMStreamProcessor`'s `thinkingTagMap` option.
- *
- * Gemma 4 uses `<|channel>thought … <channel|>` for internal reasoning when
- * thinking mode is enabled via the `<|think|>` system instruction.
+ * Declarative per-family model metadata for prompt-control-token stripping and
+ * non-default thinking tag pairs.
  */
-export const GEMMA4_THINKING_TAG_MAP = new Map<string, readonly [string, string]>([
-  ['gemma4', ['<|channel>thought', '<channel|>']]
-]);
+interface ModelTextProfile {
+  id: string;
+  modelMatch: RegExp;
+  supportsThinking?: boolean;
+  thinkingTags?: readonly [string, string];
+  visibleControlTokenPatterns: readonly RegExp[];
+}
 
-/**
- * Regex matching Gemma 4 pipe-delimited control tokens that can leak into model
- * output when Ollama does not fully strip them server-side. These tokens use
- * Gemma 4's non-XML format and are invisible to the SAX-based `xmlFilter`.
- *
- * Covered tokens:
- *   <|turn>model / <|turn>user / <|turn>system   — turn start markers
- *   <turn|>                                       — turn end marker
- *   <|channel>thought / <|channel>               — thinking channel open
- *   <channel|>                                    — thinking channel close
- *   <|image|> / <|audio|>                         — multimodal placeholders
- *   <|"|>                                         — string delimiter
- *
- * Does NOT match Granite's `<|thinking|>` / `</|thinking|>` or
- * ChatML's `<|im_start|>` / `<|im_end|>`.
- */
-const GEMMA4_PIPE_TOKEN_RE =
+const DEFAULT_THINKING_TAGS = ['<think>', '</think>'] as const;
+
+const GEMMA4_VISIBLE_CONTROL_TOKEN_RE =
   /(<\|turn>[a-z]+\n?|<turn\|>|<\|channel>[a-z]*\n?|<channel\|>|<\|image\|>|<\|audio\|>|<\|"\|>)/g;
 
-export function stripGemmaPipeTokens(text: string): string {
-  return text.replace(GEMMA4_PIPE_TOKEN_RE, '');
+const QWEN_CHATML_VISIBLE_CONTROL_TOKEN_RE = /(<\|im_start\|>(system|user|assistant)\n?|<\|im_end\|>|<\|endoftext\|>)/g;
+
+const MODEL_TEXT_PROFILES: readonly ModelTextProfile[] = [
+  {
+    id: 'gemma4',
+    modelMatch: /gemma4/i,
+    supportsThinking: true,
+    thinkingTags: ['<|channel>thought', '<channel|>'],
+    visibleControlTokenPatterns: [GEMMA4_VISIBLE_CONTROL_TOKEN_RE]
+  },
+  {
+    id: 'qwen3',
+    modelMatch: /qwen3/i,
+    supportsThinking: true,
+    thinkingTags: DEFAULT_THINKING_TAGS,
+    visibleControlTokenPatterns: [QWEN_CHATML_VISIBLE_CONTROL_TOKEN_RE]
+  },
+  {
+    id: 'qwq',
+    modelMatch: /qwq/i,
+    supportsThinking: true,
+    thinkingTags: DEFAULT_THINKING_TAGS,
+    visibleControlTokenPatterns: [QWEN_CHATML_VISIBLE_CONTROL_TOKEN_RE]
+  },
+  {
+    id: 'qwen-chatml',
+    modelMatch: /qwen|qwq/i,
+    visibleControlTokenPatterns: [QWEN_CHATML_VISIBLE_CONTROL_TOKEN_RE]
+  },
+  {
+    id: 'deepseek-r1',
+    modelMatch: /deepseek-?r1/i,
+    supportsThinking: true,
+    thinkingTags: DEFAULT_THINKING_TAGS,
+    visibleControlTokenPatterns: []
+  },
+  {
+    id: 'phi-reasoning',
+    modelMatch: /phi[0-9]+-reasoning/i,
+    supportsThinking: true,
+    thinkingTags: DEFAULT_THINKING_TAGS,
+    visibleControlTokenPatterns: []
+  },
+  {
+    id: 'kimi',
+    modelMatch: /kimi/i,
+    supportsThinking: true,
+    thinkingTags: DEFAULT_THINKING_TAGS,
+    visibleControlTokenPatterns: []
+  },
+  {
+    id: 'gpt-oss',
+    modelMatch: /gpt-oss/i,
+    supportsThinking: true,
+    thinkingTags: DEFAULT_THINKING_TAGS,
+    visibleControlTokenPatterns: []
+  },
+  {
+    id: 'generic-thinking',
+    modelMatch: /thinking/i,
+    supportsThinking: true,
+    thinkingTags: DEFAULT_THINKING_TAGS,
+    visibleControlTokenPatterns: []
+  }
+] as const;
+
+export const MODEL_THINKING_TAG_MAP = new Map<string, readonly [string, string]>(
+  MODEL_TEXT_PROFILES.filter(
+    (profile): profile is ModelTextProfile & { supportsThinking: true; thinkingTags: readonly [string, string] } =>
+      profile.supportsThinking === true && profile.thinkingTags !== undefined
+  ).map(profile => [profile.id, profile.thinkingTags])
+);
+
+export function isThinkingModelId(modelId: string): boolean {
+  return MODEL_TEXT_PROFILES.some(profile => profile.supportsThinking === true && profile.modelMatch.test(modelId));
 }
 
 /**
- * Regex matching Qwen ChatML control tokens that can leak into visible output.
- *
- * Covered tokens:
- *   <|im_start|>system / user / assistant  — turn start markers
- *   <|im_end|>                             — turn end marker
- *   <|endoftext|>                          — end-of-document marker
- *
- * Does NOT match Gemma 4's `<|turn>` / `<turn|>` format or Granite's
- * `<|thinking|>` tags.
+ * Strip known prompt-format control tokens that should never be shown to the
+ * user if a model leaks them into visible content.
  */
-const QWEN_CHATML_TOKEN_RE = /(<\|im_start\|>(system|user|assistant)\n?|<\|im_end\|>|<\|endoftext\|>)/g;
-
-export function stripQwenChatMlTokens(text: string): string {
-  return text.replace(QWEN_CHATML_TOKEN_RE, '');
+export function stripVisiblePromptControlTokens(text: string): string {
+  let output = text;
+  for (const profile of MODEL_TEXT_PROFILES) {
+    for (const pattern of profile.visibleControlTokenPatterns) {
+      output = output.replace(pattern, '');
+    }
+  }
+  return output;
 }
 
-export function stripKnownPromptControlTokens(text: string): string {
-  return stripQwenChatMlTokens(stripGemmaPipeTokens(text));
+/**
+ * Apply non-streaming XML/context sanitization and then strip any known leaked
+ * prompt-control tokens before rendering to the user.
+ */
+export function sanitizeVisibleNonStreamingModelOutput(text: string): string {
+  return stripVisiblePromptControlTokens(_sanitizeNonStreamingModelOutput(text));
 }

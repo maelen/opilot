@@ -23,7 +23,7 @@ import {
 import { fetchModelCapabilities, getCloudOllamaClient, getOllamaAuthToken, type ModelCapabilities } from './client.js';
 import type { DiagnosticsLogger } from './diagnostics.js';
 import { reportError } from './error-handler.js';
-import { isThinkingModelId } from './provider.js';
+import { isThinkingModelId } from './formatting.js';
 import { affectsSetting, getSetting } from './settings.js';
 
 const execFileAsync = promisify(execFile);
