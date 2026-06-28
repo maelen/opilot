@@ -22,8 +22,10 @@ import { formatBytes } from './format-utils.js';
 import {
   createXmlStreamFilter,
   dedupeXmlContextBlocksByTag,
+  GEMMA4_THINKING_TAG_MAP,
   sanitizeNonStreamingModelOutput,
-  splitLeadingXmlContextBlocks
+  splitLeadingXmlContextBlocks,
+  stripKnownPromptControlTokens
 } from './formatting.js';
 import {
   getModelOptionsForModel,
@@ -750,7 +752,7 @@ export async function handleChatRequest(
       // some model/version combinations still emit raw <think> tags in message.content.
       // Applying the parser unconditionally is safe: if content is already clean the
       // parser transitions through lookingForOpening → thinkingDone and passes it unchanged.
-      const thinkingParser = shouldThink ? new ThinkingParser() : null;
+      const thinkingParser = shouldThink ? ThinkingParser.forModel(modelId, GEMMA4_THINKING_TAG_MAP) : null;
 
       for await (const chunk of response) {
         if (token.isCancellationRequested) {
@@ -794,7 +796,7 @@ export async function handleChatRequest(
             }
             outputChannel?.debug(`[client] @ollama chunk: ${contentChunk.slice(0, 50)}`);
             // Filter context tags using SAX parser - handles incomplete tags across chunk boundaries
-            const cleanContent = xmlFilter.write(contentChunk);
+            const cleanContent = stripKnownPromptControlTokens(xmlFilter.write(contentChunk));
             if (cleanContent) {
               stream.markdown(cleanContent);
               emittedContent = true;
@@ -824,7 +826,7 @@ export async function handleChatRequest(
       }
 
       // Finalize XML filter to flush any remaining buffer
-      const finalContent = xmlFilter.end();
+      const finalContent = stripKnownPromptControlTokens(xmlFilter.end());
       if (finalContent) {
         stream.markdown(finalContent);
         emittedContent = true;

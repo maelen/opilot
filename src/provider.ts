@@ -40,8 +40,10 @@ import { reportError } from './error-handler.js';
 import {
   appendToBlockquote,
   dedupeXmlContextBlocksByTag,
+  GEMMA4_THINKING_TAG_MAP,
   sanitizeNonStreamingModelOutput,
-  splitLeadingXmlContextBlocks
+  splitLeadingXmlContextBlocks,
+  stripKnownPromptControlTokens
 } from './formatting.js';
 import {
   getModelOptionsForModel,
@@ -792,6 +794,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
         scrubContextTags: true,
         accumulateNativeToolCalls: true,
         modelId: runtimeModelId,
+        thinkingTagMap: GEMMA4_THINKING_TAG_MAP,
         onWarning: (msg, ctx) => {
           const ctxSuffix = ctx ? ` ${JSON.stringify(ctx)}` : '';
           this.outputChannel.warn(`[client] processor: ${msg}${ctxSuffix}`);
@@ -878,23 +881,26 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
 
             // Handle content (already XML-scrubbed by LLMStreamProcessor)
             if (output.content) {
+              const visibleContent = stripKnownPromptControlTokens(output.content);
               // When using the native thinking part, VS Code handles the visual
               // separation between thinking and response; no manual separator needed.
-              if (thinkingStarted && !contentStarted) {
+              if (visibleContent && thinkingStarted && !contentStarted) {
                 if (!useNativeThinkingPart) {
                   progress.report(new LanguageModelTextPart('\n\n\n\n'));
                   emittedOutput ||= true;
                 }
                 contentStarted = true;
               }
-              this.outputChannel.debug(`[client] streaming chunk: ${output.content.slice(0, 50)}`);
-              progress.report(new LanguageModelTextPart(output.content));
-              emittedOutput ||= true;
-              responseBuffer = (responseBuffer + output.content).slice(-600);
-              if (detectsRepetition(responseBuffer, repSensitivity)) {
-                this.outputChannel.warn(`[client] repetition detected for ${runtimeModelId}; stopping stream`);
-                progress.report(new LanguageModelTextPart('\n\n*[Stopped: repetition detected]*'));
-                break;
+              if (visibleContent) {
+                this.outputChannel.debug(`[client] streaming chunk: ${visibleContent.slice(0, 50)}`);
+                progress.report(new LanguageModelTextPart(visibleContent));
+                emittedOutput ||= true;
+                responseBuffer = (responseBuffer + visibleContent).slice(-600);
+                if (detectsRepetition(responseBuffer, repSensitivity)) {
+                  this.outputChannel.warn(`[client] repetition detected for ${runtimeModelId}; stopping stream`);
+                  progress.report(new LanguageModelTextPart('\n\n*[Stopped: repetition detected]*'));
+                  break;
+                }
               }
             }
 
@@ -1612,7 +1618,7 @@ function extractTextFromTokenCountInput(text: string | LanguageModelChatRequestM
     .join('');
 }
 
-const THINKING_MODEL_PATTERN = /qwen3|qwq|deepseek-?r1|phi[0-9]+-reasoning|kimi|gpt-oss|thinking/i;
+const THINKING_MODEL_PATTERN = /qwen3|qwq|deepseek-?r1|phi[0-9]+-reasoning|kimi|gpt-oss|thinking|gemma4/i;
 
 export function isThinkingModelId(modelId: string): boolean {
   return THINKING_MODEL_PATTERN.test(modelId);

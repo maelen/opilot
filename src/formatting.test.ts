@@ -6,6 +6,9 @@ import {
   formatXmlLikeResponseForDisplay,
   sanitizeNonStreamingModelOutput,
   splitLeadingXmlContextBlocks,
+  stripGemmaPipeTokens,
+  stripKnownPromptControlTokens,
+  stripQwenChatMlTokens,
   stripXmlContextTags
 } from './formatting.js';
 
@@ -196,6 +199,85 @@ describe('createXmlStreamFilter — performance regression', () => {
     expect(result2).not.toContain('first');
     expect(result2).toContain('second');
     expect(result3).toBe('');
+  });
+});
+
+describe('stripGemmaPipeTokens', () => {
+  it('strips turn start markers with role name', () => {
+    expect(stripGemmaPipeTokens('<|turn>model\nHello')).toBe('Hello');
+    expect(stripGemmaPipeTokens('<|turn>user\nHi')).toBe('Hi');
+    expect(stripGemmaPipeTokens('<|turn>system\nYou are a helper')).toBe('You are a helper');
+  });
+
+  it('strips turn end marker', () => {
+    expect(stripGemmaPipeTokens('Hello<turn|>')).toBe('Hello');
+  });
+
+  it('strips full turn wrapper leaving only content', () => {
+    const input = '<|turn>model\nThe answer is 42.<turn|>';
+    expect(stripGemmaPipeTokens(input)).toBe('The answer is 42.');
+  });
+
+  it('strips thinking channel open and close tokens', () => {
+    expect(stripGemmaPipeTokens('<|channel>thought\nreasoning<channel|>response')).toBe('reasoningresponse');
+  });
+
+  it('strips multimodal placeholder tokens', () => {
+    expect(stripGemmaPipeTokens('describe <|image|> and <|audio|>')).toBe('describe  and ');
+  });
+
+  it('strips string delimiter token', () => {
+    expect(stripGemmaPipeTokens('key:<|"|>value<|"|>')).toBe('key:value');
+  });
+
+  it('passes plain text unchanged', () => {
+    expect(stripGemmaPipeTokens('Hello, world!')).toBe('Hello, world!');
+  });
+
+  it('does not strip Granite thinking tokens', () => {
+    expect(stripGemmaPipeTokens('<|thinking|>some thought</|thinking|>')).toBe('<|thinking|>some thought</|thinking|>');
+  });
+
+  it('does not strip ChatML tokens', () => {
+    expect(stripGemmaPipeTokens('<|im_start|>user\nHi<|im_end|>')).toBe('<|im_start|>user\nHi<|im_end|>');
+  });
+});
+
+describe('stripQwenChatMlTokens', () => {
+  it('strips im_start markers for system, user, and assistant roles', () => {
+    expect(stripQwenChatMlTokens('<|im_start|>system\nYou are helpful.')).toBe('You are helpful.');
+    expect(stripQwenChatMlTokens('<|im_start|>user\nHi')).toBe('Hi');
+    expect(stripQwenChatMlTokens('<|im_start|>assistant\nHello')).toBe('Hello');
+  });
+
+  it('strips im_end and endoftext markers', () => {
+    expect(stripQwenChatMlTokens('Hello<|im_end|><|endoftext|>')).toBe('Hello');
+  });
+
+  it('strips a full ChatML wrapper leaving only content', () => {
+    const input = '<|im_start|>assistant\nThe answer is 42.<|im_end|><|endoftext|>';
+    expect(stripQwenChatMlTokens(input)).toBe('The answer is 42.');
+  });
+
+  it('passes plain text unchanged', () => {
+    expect(stripQwenChatMlTokens('Hello, world!')).toBe('Hello, world!');
+  });
+
+  it('does not strip Gemma 4 tokens', () => {
+    expect(stripQwenChatMlTokens('<|turn>model\nHi<turn|>')).toBe('<|turn>model\nHi<turn|>');
+  });
+
+  it('does not strip Granite thinking tokens', () => {
+    expect(stripQwenChatMlTokens('<|thinking|>some thought</|thinking|>')).toBe(
+      '<|thinking|>some thought</|thinking|>'
+    );
+  });
+});
+
+describe('stripKnownPromptControlTokens', () => {
+  it('strips both Gemma 4 and Qwen control tokens', () => {
+    const input = '<|im_start|>assistant\n<|turn>model\nHello<turn|><|im_end|><|endoftext|>';
+    expect(stripKnownPromptControlTokens(input)).toBe('Hello');
   });
 });
 
