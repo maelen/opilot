@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   appendToBlockquote,
+  createPromptControlStreamFilter,
   createXmlStreamFilter,
   dedupeXmlContextBlocksByTag,
   formatXmlLikeResponseForDisplay,
@@ -230,6 +231,39 @@ describe('stripVisiblePromptControlTokens', () => {
     expect(stripVisiblePromptControlTokens('<|thinking|>some thought</|thinking|>')).toBe(
       '<|thinking|>some thought</|thinking|>'
     );
+  });
+});
+
+describe('createPromptControlStreamFilter', () => {
+  it('strips Gemma channel content across chunk boundaries', () => {
+    const filter = createPromptControlStreamFilter();
+    const a = filter.write('<|channel>');
+    const b = filter.write('thought\nprivate reasoning');
+    const c = filter.write('<channel|>visible');
+    expect(a + b + c + filter.end()).toBe('visible');
+  });
+
+  it('handles split control token prefixes safely', () => {
+    const filter = createPromptControlStreamFilter();
+    const a = filter.write('<|chan');
+    const b = filter.write('nel>thought\nsecret');
+    const c = filter.write('<channel|>ok');
+    expect(a + b + c + filter.end()).toBe('ok');
+  });
+
+  it('strips Qwen ChatML control tokens across boundaries', () => {
+    const filter = createPromptControlStreamFilter();
+    const a = filter.write('<|im_start|>assistant\n');
+    const b = filter.write('hello');
+    const c = filter.write('<|im_end|><|endo');
+    const d = filter.write('ftext|>');
+    expect(a + b + c + d + filter.end()).toBe('hello');
+  });
+
+  it('does not strip non-target token families', () => {
+    const filter = createPromptControlStreamFilter();
+    const out = filter.write('<|thinking|>granite</|thinking|>');
+    expect(out + filter.end()).toBe('<|thinking|>granite</|thinking|>');
   });
 });
 

@@ -20,13 +20,13 @@ import {
 } from './extension-helpers.js';
 import { formatBytes } from './format-utils.js';
 import {
+  createPromptControlStreamFilter,
   createXmlStreamFilter,
   dedupeXmlContextBlocksByTag,
   isThinkingModelId,
   MODEL_THINKING_TAG_MAP,
   sanitizeVisibleNonStreamingModelOutput,
-  splitLeadingXmlContextBlocks,
-  stripVisiblePromptControlTokens
+  splitLeadingXmlContextBlocks
 } from './formatting.js';
 import {
   getModelOptionsForModel,
@@ -742,6 +742,7 @@ export async function handleChatRequest(
 
       const renderState = createStreamRenderState();
       const repSensitivity = resolveRepetitionSensitivity(getSetting<string>('repetitionDetection', 'conservative'));
+      const promptControlFilter = createPromptControlStreamFilter();
       const xmlFilter = createXmlStreamFilter({
         onWarning: (msg, ctx) => {
           const ctxSuffix = ctx ? ` ${JSON.stringify(ctx)}` : '';
@@ -792,7 +793,7 @@ export async function handleChatRequest(
             }
             outputChannel?.debug(`[client] @ollama chunk: ${contentChunk.slice(0, 50)}`);
             // Filter context tags using SAX parser - handles incomplete tags across chunk boundaries
-            const cleanContent = stripVisiblePromptControlTokens(xmlFilter.write(contentChunk));
+            const cleanContent = promptControlFilter.write(xmlFilter.write(contentChunk));
             if (cleanContent) {
               stream.markdown(cleanContent);
               if (appendVisibleResponseChunk(renderState, cleanContent, repSensitivity)) {
@@ -819,10 +820,15 @@ export async function handleChatRequest(
       }
 
       // Finalize XML filter to flush any remaining buffer
-      const finalContent = stripVisiblePromptControlTokens(xmlFilter.end());
+      const finalContent = promptControlFilter.write(xmlFilter.end());
       if (finalContent) {
         stream.markdown(finalContent);
         appendVisibleResponseChunk(renderState, finalContent, repSensitivity);
+      }
+      const finalResidualContent = promptControlFilter.end();
+      if (finalResidualContent) {
+        stream.markdown(finalResidualContent);
+        appendVisibleResponseChunk(renderState, finalResidualContent, repSensitivity);
       }
 
       // Some model/server combinations return a successful stream that emits

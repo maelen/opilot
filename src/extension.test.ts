@@ -3214,7 +3214,7 @@ describe('handleBuiltInOllamaConflict', () => {
 
     let targetReads = 0;
     const readFile = vi.fn().mockImplementation((path: string) => {
-      if (path !== targetPath) {
+      if (path.replaceAll('\\', '/') !== targetPath) {
         throw new Error('ENOENT');
       }
       targetReads += 1;

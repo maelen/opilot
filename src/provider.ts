@@ -39,12 +39,12 @@ import type { DiagnosticsLogger } from './diagnostics.js';
 import { reportError } from './error-handler.js';
 import {
   appendToBlockquote,
+  createPromptControlStreamFilter,
   dedupeXmlContextBlocksByTag,
   isThinkingModelId as isThinkingModelIdFromProfile,
   MODEL_THINKING_TAG_MAP,
   sanitizeVisibleNonStreamingModelOutput,
-  splitLeadingXmlContextBlocks,
-  stripVisiblePromptControlTokens
+  splitLeadingXmlContextBlocks
 } from './formatting.js';
 import {
   getModelOptionsForModel,
@@ -794,6 +794,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
 
       const renderState = createStreamRenderState();
       const repSensitivity = resolveRepetitionSensitivity(getSetting<string>('repetitionDetection', 'conservative'));
+      const promptControlFilter = createPromptControlStreamFilter();
       const processor = new LLMStreamProcessor({
         parseThinkTags: shouldThink,
         scrubContextTags: true,
@@ -880,7 +881,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
 
             // Handle content (already XML-scrubbed by LLMStreamProcessor)
             if (output.content) {
-              const visibleContent = stripVisiblePromptControlTokens(output.content);
+              const visibleContent = promptControlFilter.write(output.content);
               // When using the native thinking part, VS Code handles the visual
               // separation between thinking and response; no manual separator needed.
               if (visibleContent && beginContentSection(renderState) && !useNativeThinkingPart) {
@@ -925,13 +926,22 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
       // Flush any remaining buffered content from the processor
       const final: ProcessedOutput = processor.flush();
       if (final.content) {
-        const finalVisibleContent = stripVisiblePromptControlTokens(final.content);
+        const finalVisibleContent = promptControlFilter.write(final.content);
         if (beginContentSection(renderState)) {
           progress.report(new LanguageModelTextPart('\n\n\n\n'));
           renderState.emittedOutput = true;
         }
         progress.report(new LanguageModelTextPart(finalVisibleContent));
         appendVisibleResponseChunk(renderState, finalVisibleContent, repSensitivity);
+      }
+      const finalResidualContent = promptControlFilter.end();
+      if (finalResidualContent) {
+        if (beginContentSection(renderState)) {
+          progress.report(new LanguageModelTextPart('\n\n\n\n'));
+          renderState.emittedOutput = true;
+        }
+        progress.report(new LanguageModelTextPart(finalResidualContent));
+        appendVisibleResponseChunk(renderState, finalResidualContent, repSensitivity);
       }
 
       // Some model/server combinations can return a successful stream that emits
