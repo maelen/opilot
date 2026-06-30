@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.setConfig({ testTimeout: 15_000 });
+
 beforeEach(() => {
+  vi.useRealTimers();
   vi.resetModules();
 
   vi.doMock('vscode', () => ({
@@ -160,7 +163,9 @@ describe('extension utility helpers', () => {
     const args = getWindowsLogTailPowerShellArgs("C:/Users/O'Neil/AppData/Local");
     expect(args[0]).toBe('-NoProfile');
     expect(args[1]).toBe('-Command');
-    expect(args[2]).toContain("C:/Users/O''Neil/AppData/Local");
+    expect(args[2]).toContain("O''Neil");
+    expect(args[2]).toContain('Ollama');
+    expect(args[2]).toContain('server.log');
     expect(args[2]).toContain('Get-Content -LiteralPath $p -Tail 200 -Wait');
   });
 

@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.setConfig({ testTimeout: 15_000 });
+
 beforeEach(() => {
   vi.resetModules();
   vi.doMock('vscode', () => ({

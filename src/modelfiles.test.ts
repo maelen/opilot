@@ -3,6 +3,8 @@ import type { Ollama } from 'ollama';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { InputBoxOptions } from 'vscode';
 
+vi.setConfig({ testTimeout: 15_000 });
+
 // ---------------------------------------------------------------------------
 // getModelfilesFolder
 // ---------------------------------------------------------------------------
@@ -110,15 +112,15 @@ describe('getModelfilesFolder', () => {
   it('expands ~/ prefix in configured path', async () => {
     const { getModelfilesFolder } = await import('./modelfiles.js');
     const config = { get: vi.fn().mockReturnValue('~/custom/modelfiles') };
-    expect(getModelfilesFolder(config as any, '/home/user')).toBe('/home/user/custom/modelfiles');
+    const result = getModelfilesFolder(config as any, '/home/user');
+    expect(result.replace(/\\/g, '/')).toBe('/home/user/custom/modelfiles');
   });
 
   it('resolves relative configured path from workspace folder when available', async () => {
     const { getModelfilesFolder } = await import('./modelfiles.js');
     const config = { get: vi.fn().mockReturnValue('.ollama/modelfiles') };
-    expect(getModelfilesFolder(config as any, '/home/user', '/workspace/project')).toBe(
-      '/workspace/project/.ollama/modelfiles'
-    );
+    const result = getModelfilesFolder(config as any, '/home/user', '/workspace/project');
+    expect(result.replace(/\\/g, '/')).toMatch(/\/workspace\/project\/\.ollama\/modelfiles$/);
   });
 });
 

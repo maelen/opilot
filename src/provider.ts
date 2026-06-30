@@ -69,16 +69,7 @@ const MODEL_LIST_REFRESH_MIN_INTERVAL_MS = 5000;
 const MODEL_INFO_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const MODEL_SHOW_TIMEOUT_MS = 2000;
 const NON_TOOL_MODEL_MIN_PICKER_CONTEXT_TOKENS = 131_072;
-const ASK_PICKER_CATEGORY = { label: 'Ask', order: 1 } as const;
 const MODEL_ID_PREFIX = 'ollama:';
-type LanguageModelChatInformationWithPicker = LanguageModelChatInformation & {
-  category?: {
-    label: string;
-    order: number;
-  };
-  isUserSelectable?: boolean;
-};
-
 /**
  * Ollama Chat Model Provider
  */
@@ -287,25 +278,22 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
     this.nativeToolCallingByModelId.set(providerModelId, nativeToolCalling);
     this.visionByModelId.set(modelId, false);
     this.visionByModelId.set(providerModelId, false);
-    return this.withModelPickerMetadata(
-      {
-        id: providerModelId,
-        name: formatModelName(modelId),
-        family: '🦙 Ollama',
-        version: '1.0.0',
-        detail: '🦙 Ollama',
-        tooltip: `🦙 Ollama • ${modelId}`,
-        maxInputTokens: this.getAdvertisedContextLength(contextLength, false),
-        // Output tokens should not mirror picker-context fallback values.
-        // Use a conservative default when model metadata is unavailable.
-        maxOutputTokens: 4096,
-        capabilities: {
-          imageInput: false,
-          toolCalling: this.getAdvertisedToolCalling(nativeToolCalling)
-        }
-      },
-      nativeToolCalling
-    );
+    return {
+      id: providerModelId,
+      name: formatModelName(modelId),
+      family: '🦙 Ollama',
+      version: '1.0.0',
+      detail: '🦙 Ollama',
+      tooltip: `🦙 Ollama • ${modelId}`,
+      maxInputTokens: this.getAdvertisedContextLength(contextLength),
+      // Output tokens should not mirror picker-context fallback values.
+      // Use a conservative default when model metadata is unavailable.
+      maxOutputTokens: 4096,
+      capabilities: {
+        imageInput: false,
+        toolCalling: nativeToolCalling
+      }
+    };
   }
 
   private toProviderModelId(modelId: string): string {
@@ -318,57 +306,22 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
 
   /**
    * VS Code can omit lower-context models from the active chat-mode picker.
-   * Advertise the real context length when known, and only fall back to a
-   * conservative minimum when the context length is unknown or zero so that
-   * non-tool models remain available under Ask without overstating their
-   * capabilities.
+   * Advertise the real context length when known, and fall back to a
+   * conservative minimum when the context length is unknown or zero.
+   *
+   * Some Ollama /api/show responses omit context_length for otherwise valid
+   * chat models. Without a fallback, those models can disappear from the
+   * Copilot picker even though inference works.
    */
-  private getAdvertisedContextLength(contextLength: number, supportsTools: boolean): number {
-    if (supportsTools) {
-      return contextLength;
-    }
-
-    // For non-tool models, only use the picker minimum when the context length
-    // is unknown or not set — never inflate a real known context length.
+  private getAdvertisedContextLength(contextLength: number): number {
+    // Keep real context lengths intact when available.
     if (contextLength && contextLength > 0) {
       return contextLength;
     }
 
+    // Use a conservative fallback when model metadata is incomplete.
+    // This preserves picker visibility for both tool and non-tool chat models.
     return NON_TOOL_MODEL_MIN_PICKER_CONTEXT_TOKENS;
-  }
-
-  /**
-   * VS Code's current picker filtering can hide models that advertise
-   * `toolCalling: false`, even when they are user-selectable and categorized.
-   *
-   * Workaround: advertise `toolCalling: true` for picker visibility.
-   * Runtime tool behavior is still gated by native capability checks via
-   * `nativeToolCallingByModelId` before sending tools in requests.
-   */
-  private getAdvertisedToolCalling(_nativeToolCalling: boolean): boolean {
-    return true;
-  }
-
-  /**
-   * Hint VS Code's model picker to group non-tool models under Ask.
-   */
-  private withModelPickerMetadata(
-    info: LanguageModelChatInformation,
-    nativeToolCalling: boolean
-  ): LanguageModelChatInformation {
-    const selectable = {
-      ...info,
-      isUserSelectable: true
-    } as LanguageModelChatInformationWithPicker;
-
-    if (nativeToolCalling) {
-      return selectable;
-    }
-
-    return {
-      ...selectable,
-      category: ASK_PICKER_CATEGORY
-    } as LanguageModelChatInformationWithPicker;
   }
 
   /**
@@ -449,7 +402,7 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
       this.nativeToolCallingByModelId.set(providerModelId, nativeToolCalling);
       this.visionByModelId.set(modelId, isVision);
       this.visionByModelId.set(providerModelId, isVision);
-      const advertisedContextLength = this.getAdvertisedContextLength(contextLength, nativeToolCalling);
+      const advertisedContextLength = this.getAdvertisedContextLength(contextLength);
 
       // Parse num_predict for output token limit (independent of context window).
       let maxOutputTokens = 4096;
@@ -461,23 +414,20 @@ export class OllamaChatModelProvider implements LanguageModelChatProvider<Langua
         }
       }
 
-      return this.withModelPickerMetadata(
-        {
-          id: providerModelId,
-          name: formatModelName(modelId),
-          family: '🦙 Ollama',
-          version: '1.0.0',
-          detail: '🦙 Ollama',
-          tooltip: `🦙 Ollama • ${modelId}`,
-          maxInputTokens: advertisedContextLength,
-          maxOutputTokens,
-          capabilities: {
-            imageInput: isVision,
-            toolCalling: this.getAdvertisedToolCalling(nativeToolCalling)
-          }
-        },
-        nativeToolCalling
-      );
+      return {
+        id: providerModelId,
+        name: formatModelName(modelId),
+        family: '🦙 Ollama',
+        version: '1.0.0',
+        detail: '🦙 Ollama',
+        tooltip: `🦙 Ollama • ${modelId}`,
+        maxInputTokens: advertisedContextLength,
+        maxOutputTokens,
+        capabilities: {
+          imageInput: isVision,
+          toolCalling: nativeToolCalling
+        }
+      };
     } catch (error) {
       this.outputChannel.exception(`[client] failed to get model info for ${modelId}`, error);
       return;

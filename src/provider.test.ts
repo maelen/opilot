@@ -348,7 +348,7 @@ describe('OllamaChatModelProvider model detection', () => {
     );
     expect(models[0]?.maxInputTokens).toBe(131_072);
     expect(models[0]?.maxOutputTokens).toBe(4096);
-    expect((models[0] as unknown as { category?: { label?: string } })?.category?.label).toBe('Ask');
+    expect((models[0] as unknown as { category?: { label?: string } })?.category).toBeUndefined();
   });
 
   it('detects tool support from capabilities array', async () => {
@@ -528,7 +528,7 @@ describe('OllamaChatModelProvider error handling', () => {
     expect(models).toHaveLength(2);
     expect(models[0]?.name).toBe('Llama2');
     expect(models[0]?.detail).toBe('🦙 Ollama');
-    expect(models[0]?.capabilities?.toolCalling).toBe(true);
+    expect(models[0]?.capabilities?.toolCalling).toBe(false);
   });
 
   it('prunes cache when models are removed', async () => {

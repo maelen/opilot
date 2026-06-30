@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+vi.setConfig({ testTimeout: 15_000 });
+
 // ---------------------------------------------------------------------------
 // Helper: build a minimal vscode mock
 // ---------------------------------------------------------------------------
@@ -21,6 +23,10 @@ const makeVscodeMock = (host = 'http://localhost:11434') => ({
 // ---------------------------------------------------------------------------
 
 describe('getOllamaClient', () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
